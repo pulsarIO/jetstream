@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd"
+    default-lazy-init="false">
+
+	<bean class="com.ebay.jetstream.management.jmx.JvmManagement"
+		lazy-init="false" />
+
+	<bean id="NICUsage" scope="singleton" lazy-init="false"
+		class="com.ebay.jetstream.config.NICUsage">
+		<property name="dnsMap" ref="DNSMap" />
+	</bean>
+
+	<bean id="DNSMap" class="com.ebay.jetstream.config.dns.impl.DNSJNDIMap"
+		scope="singleton" />
+
+	<bean id="InboundMessageFlowManagement"
+		class="com.ebay.jetstream.event.support.channel.ChannelFlowManagement" />
+	
+	<bean id="DataFlows" class="com.ebay.jetstream.application.dataflows.DataFlows" />
+	
+	<bean id="VisualDataFlow" class="com.ebay.jetstream.application.dataflows.VisualDataFlow"
+		depends-on="DataFlows" />
+		
+	<bean id="JettyThreadPool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
+		<property name="minThreads" value="2" />
+		<property name="maxThreads" value="8" />
+		<property name="name" value="JettyThread"></property>
+	</bean>
+	
+	<bean id="Jettyhandlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
+			<property name="handlers">
+				<list>
+					<ref bean="JettyServletHandler" ></ref>
+				</list>
+			</property>
+	</bean>
+	
+	<bean id="JettyServletHandler" class="org.eclipse.jetty.servlet.ServletHandler">
+		<property name="servlets">
+				<list>
+					<bean class="org.eclipse.jetty.servlet.ServletHolder" p:name="spring-ws">
+						<property name="servlet">
+							<bean class="com.ebay.jetstream.management.ManagementServlet" />
+						</property>
+					</bean>
+					<bean class="org.eclipse.jetty.servlet.ServletHolder" p:name="visualize">
+						<property name="servlet">
+							<bean class="com.ebay.jetstream.application.dataflows.VisualServlet" />
+						</property>
+					</bean>
+				</list>
+		</property>
+		<property name="servletMappings">
+				<list>
+					<bean class="org.eclipse.jetty.servlet.ServletMapping"
+						p:servletName="spring-ws" p:pathSpec="/*" />
+					<bean class="org.eclipse.jetty.servlet.ServletMapping"
+						p:servletName="visualize" p:pathSpec="/visualpipeline" />
+				</list>
+		</property>
+	</bean>
+	
+	<bean id="JettyServer" class="org.eclipse.jetty.server.Server"
+		init-method="start" destroy-method="stop">
+		  <constructor-arg>
+            <ref bean="JettyThreadPool" />
+        </constructor-arg>
+		<property name="connectors">
+            <list>
+                <bean id="connector" class="org.eclipse.jetty.server.ServerConnector">
+                    <constructor-arg ref="JettyServer"/>
+                    <property name="port" value="#{systemProperties['jetty_port'] ?: 9999}"/>
+                </bean> 
+            </list>
+        </property>
+		<property name="handler" ref="Jettyhandlers" />
+	</bean> 
+	
+</beans>
+  

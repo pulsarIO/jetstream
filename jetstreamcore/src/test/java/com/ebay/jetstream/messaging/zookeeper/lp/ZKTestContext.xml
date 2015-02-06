@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans default-lazy-init="true">
+
+<bean id="ZkTest" class="com.ebay.jetstream.messaging.zookeeper.lp.ZKTester">
+	<property name="num_threads" value="2"></property>
+	<property name="total_nodes" value="50"></property>
+	<property name="groupname" value="/zktester.run"></property>
+	<property name="sendinterval" value="90000"></property>
+	<property name="runtime" value="600000"> </property>
+	<property name="zknode" value="localhost:2181,localhost:2182,localhost:2183,localhost:2184,localhost:2185"></property>
+	
+</bean>
+</beans>

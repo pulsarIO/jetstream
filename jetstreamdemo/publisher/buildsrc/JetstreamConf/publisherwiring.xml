@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2013-2015 eBay Software Foundation
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+      
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd"
+
+    default-lazy-init="false">
+    
+	<bean id="EventGenerator" class="com.ebay.jetstream.event.generator.GenericEventGenerator"
+		depends-on="OutboundMessages">
+		<property name="rate" value="1000" />
+		<property name="eventBuilder" ref="publisherEventBuilder" />
+		<property name="eventCount" value="5000000000" />
+		<property name="genAfinityKey" value="true" />
+		<property name="sendEventsOnInit" value="true" />
+		<property name="eventSinks" ref="EventGeneratorSinks"/>
+	</bean>
+	
+	<bean id="publisherEventBuilder" class="com.ebay.jetstream.demo.publisher.processor.PublisherEventBuilder">
+	
+	</bean>
+	
+	 <bean id="EventGeneratorSinks" class="com.ebay.jetstream.event.EventSinkList">
+       <constructor-arg>
+            <list>
+               <ref bean="Paritionedloadbalancer"/>
+            </list>
+        </constructor-arg>
+    </bean>
+	
+    
+    <bean id="loadbalancerSinks" class="com.ebay.jetstream.event.EventSinkList">
+       <constructor-arg>
+            <list>
+               <ref bean="EsperProcessor"/>
+                <ref bean="SampleProcessor2"/>
+              <ref bean="SampleProcessor3"/>
+            </list>
+        </constructor-arg>
+    </bean>
+    
+     <bean id="PartitionedloadbalancerSinks" class="com.ebay.jetstream.event.EventSinkList">
+       <constructor-arg>
+            <list>
+               <ref bean="EsperProcessor"/>
+                <ref bean="SampleProcessor2"/>
+              <ref bean="SampleProcessor3"/>
+            </list>
+        </constructor-arg>
+    </bean>
+    
+     <bean id="loadbalancer" class="com.ebay.jetstream.event.processor.loadbalance.RoundRobinLoadBalancer">
+        <property name="eventSinks" ref="loadbalancerSinks"/>
+          
+    </bean>
+
+
+    
+	<bean id="Paritionedloadbalancer"
+		class="com.ebay.jetstream.event.processor.loadbalance.PartitionedLoadBalancer">
+		<property name="eventSinks" ref="PartitionedloadbalancerSinks" />
+		<property name="config" ref="ParitionedloadbalancerConfig" />
+	</bean>
+	
+	<bean id="ParitionedloadbalancerConfig"
+		class="com.ebay.jetstream.event.processor.loadbalance.PartionedLoadBalancerConfig">
+	   <property name="partitionKeys">
+			<map>
+				<entry>
+					<key>
+						<value>Person</value>
+					</key>
+					
+						<list>
+						   <!-- <value>age</value> -->
+						   <value>gender</value> 
+						</list>
+					
+				</entry>
+			</map>
+    </property>
+	</bean>
+    
+    <bean id="SampleProcessor" class="com.ebay.jetstream.demo.publisher.processor.SampleProcessor">
+        <property name="eventSinks">
+            <list>
+               
+            </list>
+        </property>
+    </bean>
+    
+     <bean id="SampleProcessor2" class="com.ebay.jetstream.demo.publisher.processor.SampleProcessor">
+        <property name="eventSinks">
+            <list>
+                <list>
+                </list>
+            </list>
+        </property>
+    </bean>
+    
+     <bean id="SampleProcessor3" class="com.ebay.jetstream.demo.publisher.processor.SampleProcessor">
+        <property name="eventSinks">
+            <list>
+               
+            </list>
+        </property>
+    </bean>
+    
+    <bean id="OutboundMessageChanneBinder" class="com.ebay.jetstream.event.support.channel.ChannelBinding"
+        depends-on="MessageService">
+        <property name="channel" ref="OutboundMessages" />
+    </bean>
+    
+    <bean id="OutboundMessages"
+        class="com.ebay.jetstream.event.channel.messaging.OutboundMessagingChannel"
+        depends-on="MessageService">
+        <property name="address" ref="OutboundMessageChannelAddress" />
+    </bean>
+
+    <bean id="OutboundMessageChannelAddress"
+        class="com.ebay.jetstream.event.channel.messaging.MessagingChannelAddress">
+        <property name="channelTopics">
+            <list>
+                <value>Jetstream.demo/Person</value>
+            </list>
+        </property>
+    </bean>
+    
+    <bean id="EsperProcessor" class="com.ebay.jetstream.event.processor.esper.EsperProcessor">
+		<property name="esperEventListener" ref="EsperEventListener" />
+		<property name="configuration" ref="EsperConfiguration" />
+		<property name="epl" ref="EPL" />
+		
+		<property name="eventSinks">
+			<list>
+				<ref bean="OutboundMessages" />
+			</list>
+		</property>
+		
+		
+		
+		
+			
+	</bean>
+    
+    <!-- This Orchestrator is used to gracefully shutdown the processors in case of error. Mention all the 
+    processors you want to shut down. Make sure you implement shutdown for custom processors. -->
+    <bean id="ShutDownOrchestrator" class="com.ebay.jetstream.event.support.ShutDownOrchestrator"
+        lazy-init="false">
+        <property name="shutDownComponent">
+            <list>
+                <ref bean="SampleProcessor" />
+                <ref bean="OutboundMessages" />
+            </list>
+        </property>
+    </bean>
+</beans>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
+    
+	default-lazy-init="true">
+
+	<bean id="InboundRESTChannelBinder" scope="singleton"
+		class="com.ebay.jetstream.event.support.channel.ChannelBinding">
+		<property name="channel" ref="InboundRESTEvents">
+
+		</property>
+	</bean>
+	
+	<bean id="InboundRESTEvents"
+		class="com.ebay.jetstream.event.channel.messaging.http.inbound.InboundRESTChannel">
+		<!--  <property name="serverConfig" ref="NettyHttpServerConfig" /> -->
+		<property name="server" ref="NettyHttpServer" />
+		<property name="eventSinks">
+			<list>
+			
+			</list>
+		</property>
+	</bean>
+
+    
+	<bean id="LoggingConfiguration"
+		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+		lazy-init="false" >
+		<property name="targetClass" value="com.ebay.jetstream.config.ConfigUtils" />
+		<property name="targetMethod" value="setLoggingProperties" />
+		<property name="arguments">
+			<props>
+				<!-- ###################### # Global properties ###################### 
+					# "handlers" specifies a comma separated list of log Handler # classes. These 
+					handlers will be installed during VM startup. # Note that these classes must 
+					be on the system classpath. # By default we only configure a ConsoleHandler, 
+					which will only # show messages at the INFO and above levels. -->
+				<prop key="handlers">
+					java.util.logging.ConsoleHandler
+					
+                     </prop>
+				<!-- # global logging level. # This specifies which kinds of events are 
+					logged across # all loggers. For any given facility this global level # can 
+					be overriden by a facility specific level # Note that the ConsoleHandler 
+					also has a separate level # setting to limit messages printed to the console. -->
+				<prop key=".level">INFO</prop>
+				<!-- ###################### # Handler specific properties. # Describes 
+					specific configuration info for Handlers. ###################### # default 
+					file output is in user's home directory (user.home). -->
+				<!-- # Limit the message that are printed on the console -->
+				<prop key="java.util.logging.ConsoleHandler.level">INFO</prop>
+				<prop key="java.util.logging.ConsoleHandler.formatter">java.util.logging.SimpleFormatter</prop>
+				<prop key="com.ebay.jetstream.logging.JetstreamLogAdapter.level">INFO</prop>
+				<prop key="com.ebay.jetstream.logging.JetstreamLogAdapter.formatter">java.util.logging.SimpleFormatter</prop>
+				<!-- ###################### # Facility specific properties. # Provides 
+					extra control for each logger. ###################### 
+					# For example, set 
+					the com.xyz.foo logger to only log SEVERE  
+					-->
+
+				<prop key="com.espertech.esper.core.EPRuntimeImpl.level">SEVERE</prop>
+
+			</props>
+		</property>
+	</bean>
+
+
+
+	<bean id="NettyHttpServer" class="com.ebay.jetstream.http.netty.server.HttpServer">
+		<property name="serverConfig" ref="NettyHttpServerConfig" />
+	</bean>
+
+	<bean id="NettyHttpServerConfig" class="com.ebay.jetstream.http.netty.server.HttpServerConfig">
+		<property name="port" value="8084" />
+		<property name="maxWorkQueueSz" value="10000" />
+		<property name="servletExecutorThreads" value="1" />
+		<property name="numIOWorkers" value="2" />
+		<property name="servletDefinitions">
+			<list>
+				<bean
+					class="com.ebay.jetstream.servlet.ServletDefinition">
+					<property name="servletClass"
+						value="com.ebay.jetstream.management.PingServlet" />
+					<property name="urlPath" value="/ecv" />  
+				</bean>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="outboundRESTChannel"
+		class="com.ebay.jetstream.event.channel.messaging.http.outbound.OutboundRESTChannel"
+		depends-on="InboundRESTEvents">
+		<property name="address" ref="outboundRESTChannelAddress" />
+		<property name="config" ref="HttpClientConfig" />
+	</bean>
+	
+	<bean id="outboundRESTChanneBinder" class="com.ebay.jetstream.event.support.channel.ChannelBinding"
+		lazy-init="default" autowire="default">
+		<property name="channel" ref="outboundRESTChannel" />
+	</bean>
+
+	<bean id="outboundRESTChannelAddress"
+		class="com.ebay.jetstream.event.channel.messaging.http.outbound.RESTChannelAddress">
+		<property name="urlList">
+			<list>
+				 <value>http://localhost:8085/RTBDEventConsumerServlet</value> 
+			</list>
+		</property>
+	</bean>
+
+	<bean id="HttpClientConfig"
+		class="com.ebay.jetstream.http.netty.client.HttpClientConfig">
+		<property name="numConnections" value="1" />
+		<property name="batchSz" value="1" />
+		<property name="numWorkers" value="3" />
+		<property name="maxNettyBacklog" value="60" /> 
+	</bean>
+	
+</beans>

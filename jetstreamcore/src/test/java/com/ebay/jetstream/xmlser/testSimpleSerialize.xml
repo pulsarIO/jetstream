@@ -1,0 +1,31 @@
+<bean class="com.ebay.jetstream.xmlser.XmlSerTestPerson">
+  <FullName>John Doe</FullName>
+  <Hobbies>
+    <item class="String">soccer</item>
+    <item class="String">pingpong</item>
+    <item>null</item>
+  </Hobbies>
+  <Scores>
+    <entry class="Integer" key="pingpong">70</entry>
+    <entry class="Integer" key="soccer">100</entry>
+  </Scores>
+  <Residence class="com.ebay.jetstream.xmlser.XmlSerTestAddress">
+    <Category>HOME</Category>
+    <City>San Jose</City>
+    <Street>2145 Ham Ave</Street>
+  </Residence>
+  <Homes>
+    <entry class="com.ebay.jetstream.xmlser.XmlSerTestAddress" key="India">
+      <Category>null</Category>
+      <City>San Jose</City>
+      <Street>2145 Ham Ave</Street>
+    </entry>
+    <entry class="com.ebay.jetstream.xmlser.XmlSerTestAddress" key="USA">
+      <Category>BUSINESS</Category>
+      <City>San Jose</City>
+      <Street>2145 Ham Ave</Street>
+    </entry>
+    <entry key="nullTest">null</entry>
+  </Homes>
+  <Age>35</Age>
+</bean>

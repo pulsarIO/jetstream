@@ -1,0 +1,47 @@
+<bean class="com.ebay.jetstream.xmlser.XmlSerTestPerson" id="e-0" lazy-init="true">
+  <property name="fullName" value="John Doe"/>
+  <property name="hobbies">
+    <list>
+      <value>soccer</value>
+      <value>pingpong</value>
+      <null/>
+    </list>
+  </property>
+  <property name="scores">
+    <props>
+      <prop key="pingpong">70</prop>
+      <prop key="soccer">100</prop>
+    </props>
+  </property>
+  <property name="residence">
+    <bean class="com.ebay.jetstream.xmlser.XmlSerTestAddress">
+      <property name="category" value="HOME"/>
+      <property name="city" value="San Jose"/>
+      <property name="street" value="2145 Ham Ave"/>
+    </bean>
+  </property>
+  <property name="homes">
+    <map>
+      <entry key="India">
+        <bean class="com.ebay.jetstream.xmlser.XmlSerTestAddress">
+          <property name="category">
+            <null/>
+          </property>
+          <property name="city" value="San Jose"/>
+          <property name="street" value="2145 Ham Ave"/>
+        </bean>
+      </entry>
+      <entry key="USA">
+        <bean class="com.ebay.jetstream.xmlser.XmlSerTestAddress">
+          <property name="category" value="BUSINESS"/>
+          <property name="city" value="San Jose"/>
+          <property name="street" value="2145 Ham Ave"/>
+        </bean>
+      </entry>
+      <entry key="nullTest">
+        <null/>
+      </entry>
+    </map>
+  </property>
+  <property name="age" value="35"/>
+</bean>

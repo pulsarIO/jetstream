@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd"
+
+    default-lazy-init="false">
+    
+    <bean id="InboundMessageBinder"
+        class="com.ebay.jetstream.event.support.channel.ChannelBinding"
+        depends-on="MessageService">
+        <property name="channel" ref="InboundMessages"/>
+    </bean>
+    
+    <bean id="InboundMessages"
+        class="com.ebay.jetstream.event.channel.messaging.InboundMessagingChannel">
+        <property name="address" ref="InboundChannelAddress" />
+        <property name="waitTimeBeforeShutdown" value="15000"/>
+        <property name="eventSinks">
+            <list>
+                <ref bean="SampleProcessor" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="InboundChannelAddress"
+        class="com.ebay.jetstream.event.channel.messaging.MessagingChannelAddress">
+        <property name="channelTopics">
+            <list>
+                <value>Jetstream.sample/SampleEvent</value>
+            </list>
+        </property>
+    </bean>
+    
+    <bean id="SampleProcessor" class="${package}.processor.SampleProcessor">
+        <property name="eventSinks">
+            <list>
+                <ref bean="OutboundMessages" />
+            </list>
+        </property>
+    </bean>
+    
+    <bean id="OutboundMessageChanneBinder" class="com.ebay.jetstream.event.support.channel.ChannelBinding"
+        depends-on="MessageService">
+        <property name="channel" ref="OutboundMessages" />
+    </bean>
+    
+    <bean id="OutboundMessages"
+        class="com.ebay.jetstream.event.channel.messaging.OutboundMessagingChannel"
+        depends-on="MessageService">
+        <property name="address" ref="OutboundMessageChannelAddress" />
+    </bean>
+
+    <bean id="OutboundMessageChannelAddress"
+        class="com.ebay.jetstream.event.channel.messaging.MessagingChannelAddress">
+        <property name="channelTopics">
+            <list>
+                <value>Jetstream.sample2/SampleEvent</value>
+            </list>
+        </property>
+    </bean>
+    
+    <!-- This Orchestrator is used to gracefully shutdown the processors in case of error. Mention all the 
+    processors you want to shut down. Make sure you implement shutdown for custom processors. -->
+    <bean id="ShutDownOrchestrator" class="com.ebay.jetstream.event.support.ShutDownOrchestrator"
+        lazy-init="false">
+        <property name="shutDownComponent">
+            <list>
+                <ref bean="InboundMessages" />
+                <ref bean="SampleProcessor" />
+                <ref bean="OutboundMessages" />
+            </list>
+        </property>
+    </bean>
+</beans>

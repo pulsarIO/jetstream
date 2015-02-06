@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-2.0.xsd" default-lazy-init="true">
+    
+    <bean id="ConfigServer" class="com.ebay.jetstream.configurationmanagement.ConfigServer" lazy-init="false">
+        <property name="port" value="8080"/>
+    </bean>
+    
+    <bean id="SystemPropertiesConfiguration"
+        class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+        lazy-init="false">
+        <property name="targetClass"
+            value="com.ebay.jetstream.config.ConfigUtils" />
+        <property name="targetMethod" value="setSystemProperties" />
+        <property name="arguments">
+            <props>
+                <prop key="com.ebay.jetstream.configdomain">
+                    dev.geo-jetstream.com
+                </prop>
+                <!--  add any other system properties here -->
+            </props>
+        </property>
+    </bean>
+
+    <bean id="NICUsage" scope="singleton"
+        class="com.ebay.jetstream.config.NICUsage">
+    </bean>
+
+    <bean id="MessageService" class="com.ebay.jetstream.messaging.config.MessageServiceConfiguration"
+        scope="singleton" depends-on="SystemPropertiesConfiguration">
+        <property name="messageServiceProperties" ref="MessageServiceProperties" />
+    </bean>
+    
+
+</beans>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:task="http://www.springframework.org/schema/task"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+        ">
+
+    <context:component-scan
+        base-package="com.ebay.jetstream.configurationmanagement.controller" />
+
+    <mvc:annotation-driven />
+
+    <task:annotation-driven executor="executor" />
+    <task:executor id="executor" pool-size="100" />
+
+    <!-- Forwards requests to the "/" resource to the "welcome" view -->
+    <mvc:view-controller path="/" view-name="redirect:/configuration" />
+
+    <!-- Handles HTTP GET requests for /resources/** by efficiently serving 
+        up static resources in the ${webappRoot}/resources/ directory -->
+    <mvc:resources mapping="/resources/**" location="/resources/" />
+
+    <bean
+        class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="viewResolvers">
+            <list>
+                <bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+                <bean
+                    class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                    <property name="prefix" value="/WEB-INF/views/" />
+                    <property name="suffix" value=".jsp" />
+                </bean>
+            </list>
+        </property>
+        <property name="defaultViews">
+            <list>
+                <bean
+                    class="org.springframework.web.servlet.view.json.MappingJackson2JsonView" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="mongoConfigurationFactory"
+        class="com.ebay.jetstream.configurationmanagement.MongoConfigurationFactory"
+        scope="singleton">
+    </bean>
+    <bean id="mongoConfiguration" factory-bean="mongoConfigurationFactory"
+        factory-method="getMongoConfiguration" scope="singleton">
+    </bean>
+    <bean id="mongoConfigManager"
+        class="com.ebay.jetstream.configurationmanagement.MongoConfigManager"
+        scope="singleton">
+        <constructor-arg ref="mongoConfiguration" />
+    </bean>
+     <bean id="mongoConfigLogManager"
+        class="com.ebay.jetstream.configurationmanagement.MongoConfigLogManager"
+        scope="singleton">
+        <constructor-arg ref="mongoConfiguration" />
+    </bean>
+    <bean id="configMessagePublisher" class="com.ebay.jetstream.mongo.tools.PublishConfigMessage"
+        scope="singleton">
+    </bean>
+    <bean id="configurationManagementXMLParser"
+        class="com.ebay.jetstream.configurationmanagement.ConfigurationManagementXMLParser"
+        factory-method="getInstance" scope="singleton">
+    </bean>
+    <bean id="springContainerHolder"
+        class="com.ebay.jetstream.configurationmanagement.SpringContainerHolder">
+    </bean>
+
+</beans>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+    xmlns:security="http://www.springframework.org/schema/security"  
+    xmlns:context="http://www.springframework.org/schema/context"  
+    xsi:schemaLocation="http://www.springframework.org/schema/beans   
+http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+http://www.springframework.org/schema/context   
+http://www.springframework.org/schema/context/spring-context-3.0.xsd   
+http://www.springframework.org/schema/security   
+http://www.springframework.org/schema/security/spring-security-3.2.xsd">  
+
+    <security:http auto-config="true">  
+        <security:intercept-url pattern="/login.jsp" access="ROLE_GUEST,ROLE_ADMIN" />
+        <security:intercept-url pattern="/resources/**" access="ROLE_GUEST,ROLE_ADMIN" />
+        <security:intercept-url pattern="/favicon.ico" access="ROLE_GUEST,ROLE_ADMIN" />
+        <security:intercept-url pattern="/**" access="ROLE_ADMIN" />  
+        <security:anonymous username="guest" granted-authority="ROLE_GUEST" />  
+        <security:form-login login-page="/login.jsp"  
+            login-processing-url="/j_spring_security_login" 
+            default-target-url="/configuration"  
+            authentication-failure-url="/login.jsp?error=true" />  
+        <security:logout logout-url="/j_spring_security_logout" logout-success-url="/login.jsp" />  
+    </security:http>  
+
+    <security:authentication-manager>  
+        <security:authentication-provider>  
+            <security:user-service>  
+                <security:user name="admin" authorities="ROLE_ADMIN" password="admin" />  
+            </security:user-service>  
+        </security:authentication-provider>  
+    </security:authentication-manager>  
+</beans>  
