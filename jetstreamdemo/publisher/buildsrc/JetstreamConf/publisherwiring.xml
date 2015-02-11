@@ -28,7 +28,7 @@
 		<property name="genAfinityKey" value="true" />
 		<property name="sendEventsOnInit" value="true" />
 		<property name="eventSinks" ref="EventGeneratorSinks"/>
-	</bean>
+	</bean> 
 	
 		
 	 <bean id="EventGeneratorSinks" class="com.ebay.jetstream.event.EventSinkList">
