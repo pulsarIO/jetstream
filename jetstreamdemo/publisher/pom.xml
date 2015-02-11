@@ -134,5 +134,10 @@
             <artifactId>jetstream-channels-processors</artifactId>
             <version>${jetstream.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.ebay.jetstream</groupId>
+            <artifactId>jetstream-esper</artifactId>
+            <version>${jetstream.version}</version>
+        </dependency>
     </dependencies>
 </project> 
