@@ -24,100 +24,27 @@
 	<bean id="EventGenerator" class="com.ebay.jetstream.event.generator.GenericEventGenerator"
 		depends-on="OutboundMessages">
 		<property name="rate" value="1000" />
-		<property name="eventBuilder" ref="publisherEventBuilder" />
 		<property name="eventCount" value="5000000000" />
 		<property name="genAfinityKey" value="true" />
 		<property name="sendEventsOnInit" value="true" />
 		<property name="eventSinks" ref="EventGeneratorSinks"/>
 	</bean>
 	
-	<bean id="publisherEventBuilder" class="com.ebay.jetstream.demo.publisher.processor.PublisherEventBuilder">
-	
-	</bean>
-	
+		
 	 <bean id="EventGeneratorSinks" class="com.ebay.jetstream.event.EventSinkList">
        <constructor-arg>
             <list>
-               <ref bean="Paritionedloadbalancer"/>
+               <ref bean="SampleProcessor"/>
             </list>
         </constructor-arg>
     </bean>
 	
-    
-    <bean id="loadbalancerSinks" class="com.ebay.jetstream.event.EventSinkList">
-       <constructor-arg>
-            <list>
-               <ref bean="EsperProcessor"/>
-                <ref bean="SampleProcessor2"/>
-              <ref bean="SampleProcessor3"/>
-            </list>
-        </constructor-arg>
-    </bean>
-    
-     <bean id="PartitionedloadbalancerSinks" class="com.ebay.jetstream.event.EventSinkList">
-       <constructor-arg>
-            <list>
-               <ref bean="EsperProcessor"/>
-                <ref bean="SampleProcessor2"/>
-              <ref bean="SampleProcessor3"/>
-            </list>
-        </constructor-arg>
-    </bean>
-    
-     <bean id="loadbalancer" class="com.ebay.jetstream.event.processor.loadbalance.RoundRobinLoadBalancer">
-        <property name="eventSinks" ref="loadbalancerSinks"/>
-          
-    </bean>
-
-
-    
-	<bean id="Paritionedloadbalancer"
-		class="com.ebay.jetstream.event.processor.loadbalance.PartitionedLoadBalancer">
-		<property name="eventSinks" ref="PartitionedloadbalancerSinks" />
-		<property name="config" ref="ParitionedloadbalancerConfig" />
-	</bean>
-	
-	<bean id="ParitionedloadbalancerConfig"
-		class="com.ebay.jetstream.event.processor.loadbalance.PartionedLoadBalancerConfig">
-	   <property name="partitionKeys">
-			<map>
-				<entry>
-					<key>
-						<value>Person</value>
-					</key>
-					
-						<list>
-						   <!-- <value>age</value> -->
-						   <value>gender</value> 
-						</list>
-					
-				</entry>
-			</map>
-    </property>
-	</bean>
-    
+       
     <bean id="SampleProcessor" class="com.ebay.jetstream.demo.publisher.processor.SampleProcessor">
         <property name="eventSinks">
-            <list>
-               
-            </list>
-        </property>
-    </bean>
-    
-     <bean id="SampleProcessor2" class="com.ebay.jetstream.demo.publisher.processor.SampleProcessor">
-        <property name="eventSinks">
-            <list>
-                <list>
-                </list>
-            </list>
-        </property>
-    </bean>
-    
-     <bean id="SampleProcessor3" class="com.ebay.jetstream.demo.publisher.processor.SampleProcessor">
-        <property name="eventSinks">
-            <list>
-               
-            </list>
+           <list>
+                <ref bean="OutboundMessages" />
+           </list>
         </property>
     </bean>
     
@@ -140,23 +67,7 @@
             </list>
         </property>
     </bean>
-    
-    <bean id="EsperProcessor" class="com.ebay.jetstream.event.processor.esper.EsperProcessor">
-		<property name="esperEventListener" ref="EsperEventListener" />
-		<property name="configuration" ref="EsperConfiguration" />
-		<property name="epl" ref="EPL" />
-		
-		<property name="eventSinks">
-			<list>
-				<ref bean="OutboundMessages" />
-			</list>
-		</property>
-		
-		
-		
-		
-			
-	</bean>
+        
     
     <!-- This Orchestrator is used to gracefully shutdown the processors in case of error. Mention all the 
     processors you want to shut down. Make sure you implement shutdown for custom processors. -->
