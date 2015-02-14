@@ -33,7 +33,7 @@
         <property name="waitTimeBeforeShutdown" value="15000"/>
         <property name="eventSinks">
             <list>
-                <ref bean="EsperProcessor" />
+                <ref bean="SampleProcessor" />
             </list>
         </property>
     </bean>
@@ -47,18 +47,7 @@
         </property>
     </bean>
     
-     <bean id="EsperProcessor" class="com.ebay.jetstream.event.processor.esper.EsperProcessor">
-		<property name="esperEventListener" ref="EsperEventListener" />
-		<property name="configuration" ref="EsperConfiguration" />
-		<property name="epl" ref="EPL" />
-		
-		<property name="eventSinks">
-			<list>
-				<ref bean="SampleProcessor" />
-			</list>
-		</property>
-	</bean>
-
+     
     <bean id="SampleProcessor" class="com.ebay.jetstream.demo.subscriber.processor.SampleProcessor">
     </bean>
        
