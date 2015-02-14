@@ -127,6 +127,11 @@
 				</executions>
 			</plugin>
 			<plugin>
+     				 <groupId>org.apache.maven.plugins</groupId>
+      				 <artifactId>maven-gpg-plugin</artifactId>
+			         <version>1.5</version>
+		        </plugin>
+			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
 				<!-- Configuration for generating the Manifest.mf -->
@@ -135,7 +140,7 @@
 					<!-- Manifest Headers which need to customized during manifest generation -->
 					<instructions>
 						<!-- Bundle-Version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${timestamp}</Bundle-Version -->
-						<Export-Package>!com.ebay.kernel.*,{local-packages}</Export-Package>
+						<Export-Package>{local-packages}</Export-Package>
 						<_nouses>true</_nouses>
 						<Import-Package>*											
 					    </Import-Package>

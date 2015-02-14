@@ -40,4 +40,63 @@
         </dependency>
     </dependencies>
 
+     <build>
+		<finalName>${project.artifactId}.${project.version}.r${buildNumber}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+     				 <groupId>org.apache.maven.plugins</groupId>
+      				 <artifactId>maven-gpg-plugin</artifactId>
+			         <version>1.5</version>
+		      </plugin>
+			<!-- Apache Felix Bundle Plugin - For Generation of Manifest after Compile 
+				phase -->
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<!-- Configuration for generating the Manifest.mf -->
+				<configuration>
+					<!-- manifestLocation>src/main/resources/META-INF</manifestLocation -->
+					<!-- Manifest Headers which need to customized during manifest generation -->
+					<instructions>
+						<!-- Bundle-Version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${timestamp}</Bundle-Version -->
+						<Export-Package>{local-packages}</Export-Package>
+						<_nouses>true</_nouses>
+						<Import-Package>*
+						</Import-Package>
+					</instructions>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>	
+
 </project>

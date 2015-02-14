@@ -23,10 +23,10 @@
 	</licenses>
 	 
 	<modules>
-		<module>Build/superpom</module>
-		<module>jetstreamspring</module>
+	<module>Build/superpom</module>
+	<module>jetstreamspring</module>
     	<module>jetstreamcore</module>
-		<module>jetstreamframework</module>
+	<module>jetstreamframework</module>
     	<module>jetstream-channels-processors</module>
     	<module>jetstream-messaging</module>
     	<module>configurationmanagement</module>
