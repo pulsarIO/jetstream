@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
+	<parent>
+		<groupId>com.ebay.jetstream</groupId>
+		<artifactId>jetstream-parent</artifactId>
+		<version>4.0.0-SNAPSHOT</version>
+		<relativePath>Build/superpom/pom.xml</relativePath>
+	</parent>
+
 	<groupId>com.ebay.jetstream</groupId>
 	<artifactId>jetstream-root</artifactId>
 	<version>4.0.0-SNAPSHOT</version>
@@ -23,25 +30,13 @@
 	</licenses>
 	 
 	<modules>
-	<module>Build/superpom</module>
-	<module>jetstreamspring</module>
-    	<module>jetstreamcore</module>
-	<module>jetstreamframework</module>
-    	<module>jetstream-channels-processors</module>
-    	<module>jetstream-messaging</module>
-    	<module>configurationmanagement</module>
+		<module>Build/superpom</module>
+		<module>jetstreamspring</module>
+	    <module>jetstreamcore</module>
+		<module>jetstreamframework</module>
+	    <module>jetstream-channels-processors</module>
+	    <module>jetstream-messaging</module>
+	    <module>configurationmanagement</module>
     </modules>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.4.1</version>
-				<configuration>
-					<autoVersionSubmodules>true</autoVersionSubmodules>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>
