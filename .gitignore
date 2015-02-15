@@ -15,7 +15,6 @@ target/*
 **.patch
 
 # eclipse files
-build
 .metadata
 .project
 .settings
