@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<parent>
-		<groupId>com.ebay.jetstream</groupId>
-		<artifactId>jetstream-parent</artifactId>
-		<version>4.0.0-SNAPSHOT</version>
-		<relativePath>Build/superpom/pom.xml</relativePath>
-	</parent>
-
 	<groupId>com.ebay.jetstream</groupId>
 	<artifactId>jetstream-root</artifactId>
 	<version>4.0.0-SNAPSHOT</version>
@@ -28,6 +21,13 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+
+	<scm>
+		<connection>scm:git:git@github.com:pulsarIO/jetstream.git</connection>
+		<url>scm:git:git@github.com:pulsarIO/jetstream.git</url>
+		<developerConnection>scm:git:git@github.com:pulsarIO/jetstream.git</developerConnection>
+	  <tag>HEAD</tag>
+  	</scm>
 	 
 	<modules>
 		<module>Build/superpom</module>
