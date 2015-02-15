@@ -1,7 +1,7 @@
 Jetstream
 =========
 
-![pipeline2](./raw/master/documents/images/jetstream.png)
+![pipeline2](../../wiki/images/jetstream.png)
 
 Jetstream is a real-time stream processing system for analyzing live event streams to enable business to react to signals much earlier than is possible with batch oriented systems like Hadoop. 
 
