@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<parent>
 		<groupId>com.ebay.jetstream</groupId>
 		<artifactId>jetstream-parent</artifactId>
-		<version>4.0.0-SNAPSHOT</version>
+		<version>4.0.0</version>
 		<relativePath>../Build/superpom</relativePath>
 	</parent>
 
@@ -30,7 +29,7 @@
     <properties>
         <spring-web.version>4.1.4.RELEASE</spring-web.version>
         <spring-security.version>3.2.5.RELEASE</spring-security.version>
-        <jetstream.version>4.0.0-SNAPSHOT</jetstream.version>
+        <jetstream.version>4.0.0</jetstream.version>
     </properties>
 
     <dependencies>
