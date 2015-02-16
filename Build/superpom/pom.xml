@@ -214,6 +214,13 @@
 				<configuration>
 					<autoVersionSubmodules>true</autoVersionSubmodules>
 				</configuration>
+				<dependencies>
+        			<dependency>
+          				<groupId>org.apache.maven.scm</groupId>
+          				<artifactId>maven-scm-provider-gitexe</artifactId>
+          				<version>1.8.1</version>
+        			</dependency>
+       			</dependencies>
 			</plugin>
 
 			<plugin>
