@@ -229,6 +229,14 @@ public class OutboundRESTChannel extends AbstractOutboundChannel implements Chan
 	private void resetTopicAlarmState(String rootContext) {
 		m_alarmState.get(rootContext).set(false);
 	}
+	
+	@Override
+	public long getTotalEventsDropped() {
+		incrementEventDroppedCounter(m_client.getTotalEventsDropped(true));
+		return super.getTotalEventsDropped();
+	}
+	
+	
 
 	/*
 	 * (non-Javadoc)
@@ -285,14 +293,14 @@ public class OutboundRESTChannel extends AbstractOutboundChannel implements Chan
 	private String[] getForwardingURIList(JetstreamEvent event) {
 
 		String[] forwardingUris= event.getForwardingUrls();
-
 	
 		if (forwardingUris != null) {
 			
 			for (String str : forwardingUris) {
 				if (!m_address.getUrlList().contains(str)) {
-					if (LOGGER.isErrorEnabled()) {
-						LOGGER.error( "Either Topic " + str
+					
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("Either Topic " + str
 								+ " is undefined in configuration (check message service setup & dns setup) or the EPL is incorrect");
 					}
 				}

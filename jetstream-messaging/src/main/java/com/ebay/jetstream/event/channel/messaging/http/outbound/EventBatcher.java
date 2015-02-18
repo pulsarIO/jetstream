@@ -51,6 +51,13 @@ public class EventBatcher implements Runnable, XSerializable {
 	private AtomicLong m_highWaterMark = new AtomicLong(0);
 	private AtomicLong m_lowWaterMark = new AtomicLong(0);
 	
+	public long getMaxQueueSize() {
+		return m_maxQueueSize;
+	}
+
+	public void setMaxQueueSize(long maxQueueSize) {
+		this.m_maxQueueSize = maxQueueSize;
+	}
 
 	public long getEventsSentPerSec() {
 		return m_eventsSentPerSec.get();
@@ -81,8 +88,6 @@ public class EventBatcher implements Runnable, XSerializable {
 		Set<Entry<URI, ConcurrentLinkedQueue<JetstreamEvent>>>  urlqueues = m_urlEventQueue.entrySet();
 
 		Iterator<Entry<URI, ConcurrentLinkedQueue<JetstreamEvent>>> itr = urlqueues.iterator();
-
-//		boolean allQueuesEmpty = true;
 
 		while(itr.hasNext()) {
 			ConcurrentLinkedQueue<JetstreamEvent> queue = itr.next().getValue();
@@ -246,7 +251,8 @@ public class EventBatcher implements Runnable, XSerializable {
 				break;
 			}
 			catch (Exception e) {
-				LOGGER.error(
+				if (LOGGER.isDebugEnabled())
+				LOGGER.debug(
 						"Http Request Post Exception "
 								+ e.getLocalizedMessage());
 				m_totalEventsDropped.addAndGet(m_batchSize);
@@ -294,7 +300,6 @@ public class EventBatcher implements Runnable, XSerializable {
 
 	}
 
-	// public void submit(URI uri, JetstreamEvent event) throws Exception {
 	public void submit(URI uri, JetstreamEvent event) throws Exception {
 		if (m_shutdown.get())
 			throw new Exception("shutting down");

@@ -122,7 +122,7 @@ public class HttpClient extends Thread implements ChannelFutureListener,
 	private final BlockingQueue<Request> m_controlQueue = new SingleConsumerDisruptorQueue<Request>(
 			3000);
 	private LongCounter m_totalEventsDropped = new LongCounter();
-
+	private ConcurrentHashMap<String, LongCounter> m_urlDropCounters = new ConcurrentHashMap<String, LongCounter>();
 	private LongCounter m_totalEventsSent = new LongCounter();
 	private AtomicBoolean m_started = new AtomicBoolean(false);
 	
@@ -132,6 +132,10 @@ public class HttpClient extends Thread implements ChannelFutureListener,
 	
     private final CountDownLatch endLatch = new CountDownLatch(1);
 
+    public Map<String, LongCounter> getUrlDropCounters() {
+		return m_urlDropCounters;
+	}
+    
 	public HttpClient() {
 		super("Jetstream-HttpClient");
 		m_httpRequestHandler = new HttpResponseHandler(this);
@@ -162,6 +166,10 @@ public class HttpClient extends Thread implements ChannelFutureListener,
 		try {
 			cf = m_bootstrap.connect(new InetSocketAddress(InetAddress
 					.getByName(uri.getHost()), uri.getPort()));
+			
+			if (!m_urlDropCounters.containsKey(uri.getHost()))
+				m_urlDropCounters.put(uri.getHost(), new LongCounter());
+			
 		} catch (UnknownHostException e) {
 			LOGGER.error(
 					"failed to connect to host" + e.getLocalizedMessage());
@@ -260,8 +268,6 @@ public class HttpClient extends Thread implements ChannelFutureListener,
 
 		if (isPipelineCreated())
 			return;
-
-
         
         m_workerGroup = new NioEventLoopGroup(getConfig().getNumWorkers(), new NameableThreadFactory("Jetstream-HttpClientWorker"));
         m_bootstrap = new Bootstrap();
@@ -371,8 +377,14 @@ public class HttpClient extends Thread implements ChannelFutureListener,
         return m_responseDispatcher.getDropCounter();
     }
     
-    public long getTotalEventsDropped() {
-        return m_totalEventsDropped.get();
+    public long getTotalEventsDropped(boolean reset) {
+    	
+    	if (reset) {
+    		return m_totalEventsDropped.getAndReset();
+    	}
+    	else
+    		return m_totalEventsDropped.get();
+    	
     }
 
     public long getTotalEventsSent() {
@@ -731,7 +743,10 @@ public class HttpClient extends Thread implements ChannelFutureListener,
 		if (channelcontext != null) {
 		    channel = channelcontext.getChannel();
 		} else {
-			LOGGER.error(
+			m_totalEventsDropped.increment();
+			m_urlDropCounters.get(uri.getHost()).increment();
+			if (LOGGER.isDebugEnabled())
+				LOGGER.debug(
 					"event dropped! No connections available to"
 							+ uri.toString());
 			return;

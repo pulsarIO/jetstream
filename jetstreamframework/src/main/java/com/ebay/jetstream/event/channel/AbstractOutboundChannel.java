@@ -151,6 +151,13 @@ public abstract class AbstractOutboundChannel extends AbstractNamedBean
 	/**
 	 * 
 	 */
+	protected void incrementEventDroppedCounter(long lNumber) {
+		m_totalEventsDropped.addAndGet(lNumber);
+	}
+	
+	/**
+	 * 
+	 */
 	protected void incrementEventRecievedCounter() {
 		m_totalEventsReceived.increment();
 		m_eventsReceivedPerSec.increment();
