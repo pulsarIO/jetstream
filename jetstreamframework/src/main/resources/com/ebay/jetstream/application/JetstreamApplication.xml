@@ -29,60 +29,61 @@
 	<bean id="VisualDataFlow" class="com.ebay.jetstream.application.dataflows.VisualDataFlow"
 		depends-on="DataFlows" />
 		
-	<bean id="JettyThreadPool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
-		<property name="minThreads" value="2" />
-		<property name="maxThreads" value="8" />
-		<property name="name" value="JettyThread"></property>
+		
+	<bean id="threadpoolconfig" class="org.mortbay.thread.QueuedThreadPool">
+		<constructor-arg value="5" />
 	</bean>
-	
-	<bean id="Jettyhandlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
-			<property name="handlers">
-				<list>
-					<ref bean="JettyServletHandler" ></ref>
-				</list>
-			</property>
-	</bean>
-	
-	<bean id="JettyServletHandler" class="org.eclipse.jetty.servlet.ServletHandler">
+
+	<bean id="servletHandlerConfig" class="org.mortbay.jetty.servlet.ServletHandler">
 		<property name="servlets">
-				<list>
-					<bean class="org.eclipse.jetty.servlet.ServletHolder" p:name="spring-ws">
-						<property name="servlet">
-							<bean class="com.ebay.jetstream.management.ManagementServlet" />
-						</property>
-					</bean>
-					<bean class="org.eclipse.jetty.servlet.ServletHolder" p:name="visualize">
-						<property name="servlet">
-							<bean class="com.ebay.jetstream.application.dataflows.VisualServlet" />
-						</property>
-					</bean>
-				</list>
+			<list>
+				<bean class="org.mortbay.jetty.servlet.ServletHolder" p:name="spring-ws">
+					<property name="servlet">
+						<bean class="com.ebay.jetstream.management.ManagementServlet" />
+					</property>
+				</bean>
+				<bean class="org.mortbay.jetty.servlet.ServletHolder" p:name="visualize">
+					<property name="servlet">
+						<bean class="com.ebay.jetstream.application.dataflows.VisualServlet" />
+					</property>
+				</bean>
+			</list>
 		</property>
 		<property name="servletMappings">
-				<list>
-					<bean class="org.eclipse.jetty.servlet.ServletMapping"
-						p:servletName="spring-ws" p:pathSpec="/*" />
-					<bean class="org.eclipse.jetty.servlet.ServletMapping"
-						p:servletName="visualize" p:pathSpec="/visualpipeline" />
-				</list>
+			<list>
+				<bean class="org.mortbay.jetty.servlet.ServletMapping"
+					p:servletName="spring-ws" p:pathSpec="/*" />
+				<bean class="org.mortbay.jetty.servlet.ServletMapping"
+					p:servletName="visualize" p:pathSpec="/visualpipeline" />
+			</list>
 		</property>
 	</bean>
 	
-	<bean id="JettyServer" class="org.eclipse.jetty.server.Server"
+	<bean id="connectorsList" class="java.util.ArrayList">
+	   <constructor-arg>
+		<list>
+			<bean id="Connector" class="org.mortbay.jetty.nio.SelectChannelConnector"
+					p:port="#{systemProperties['jetty_port'] ?: 9999}" p:maxIdleTime="30000"
+					p:acceptors="2" p:confidentialPort="8443" />
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="jettyServer" class="org.mortbay.jetty.Server"
 		init-method="start" destroy-method="stop">
-		  <constructor-arg>
-            <ref bean="JettyThreadPool" />
-        </constructor-arg>
-		<property name="connectors">
-            <list>
-                <bean id="connector" class="org.eclipse.jetty.server.ServerConnector">
-                    <constructor-arg ref="JettyServer"/>
-                    <property name="port" value="#{systemProperties['jetty_port'] ?: 9999}"/>
-                </bean> 
-            </list>
-        </property>
-		<property name="handler" ref="Jettyhandlers" />
-	</bean> 
+		<property name="threadPool" ref="threadpoolconfig" />
+		<property name="connectors" ref="connectorsList" />
+		<property name="handlers">
+			<list>
+				<bean class="org.mortbay.jetty.servlet.Context" p:contextPath="/">
+					<property name="sessionHandler">
+						<bean class="org.mortbay.jetty.servlet.SessionHandler" />
+					</property>
+					<property name="servletHandler" ref="servletHandlerConfig"/>
+				</bean>
+			</list>
+		</property>
+	</bean>
 	
 </beans>
   

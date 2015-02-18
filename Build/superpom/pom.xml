@@ -541,40 +541,28 @@
 			
 	  <!-- JETTY DEPENDENCIES -->
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-http</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-websocket</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jsp</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
+				<groupId>org.mortbay.jetty</groupId>
+				<artifactId>jetty</artifactId>
+				<version>${jetty.version}</version>
+				<exclusions>
+					<exclusion>
+						<artifactId>servlet-api</artifactId>
+						<groupId>org.mortbay.jetty</groupId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<dependency>
+				<groupId>org.mortbay.jetty</groupId>
+				<artifactId>jetty-plus</artifactId>
+				<version>${jetty.version}</version>
+			</dependency>
+		
+			<dependency>
+				<groupId>org.mortbay.jetty</groupId>
+				<artifactId>jetty-naming</artifactId>
+				<version>${jetty.version}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>com.google.guava</groupId>
@@ -836,7 +824,7 @@
 		<spring.artifactprefix>spring-</spring.artifactprefix>
 		<spring.version>4.1.4.RELEASE</spring.version>
 		<curator.version>1.3.3</curator.version>
-		<jetty.version>9.3.0.M1</jetty.version>
+		<jetty.version>6.1.26</jetty.version>
 		<slf4j.version>1.7.10</slf4j.version>
 		<logback.version>1.1.2</logback.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

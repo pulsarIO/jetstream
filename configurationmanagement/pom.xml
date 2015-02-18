@@ -30,6 +30,7 @@
         <spring-web.version>4.1.4.RELEASE</spring-web.version>
         <spring-security.version>3.2.5.RELEASE</spring-security.version>
         <jetstream.version>4.0.1-SNAPSHOT</jetstream.version>
+        <jettyserver.version>9.3.0.M1</jettyserver.version>
     </properties>
 
     <dependencies>
@@ -79,26 +80,32 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
+            <version>${jettyserver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
+            <version>${jettyserver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-webapp</artifactId>
+            <version>${jettyserver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlets</artifactId>
+            <version>${jettyserver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
+            <version>${jettyserver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-jsp</artifactId>
+            <version>${jettyserver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
