@@ -62,7 +62,7 @@
 	<bean id="connectorsList" class="java.util.ArrayList">
 	   <constructor-arg>
 		<list>
-			<bean id="Connector" class="org.mortbay.jetty.nio.SelectChannelConnector"
+			<bean id="Connector" class="org.mortbay.jetty.bio.SocketConnector"
 					p:port="#{systemProperties['jetty_port'] ?: 9999}" p:maxIdleTime="30000"
 					p:acceptors="2" p:confidentialPort="8443" />
 			</list>
