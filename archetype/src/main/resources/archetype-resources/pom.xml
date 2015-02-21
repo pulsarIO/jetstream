@@ -9,7 +9,7 @@
     <name>${artifactId} app</name>
 
     <properties>
-        <jetstream.version>4.0.0-SNAPSHOT</jetstream.version>
+        <jetstream.version>4.0.1</jetstream.version>
     </properties>
     
     <build>

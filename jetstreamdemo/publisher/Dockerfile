@@ -1,6 +1,6 @@
 FROM java:openjdk-7-jdk
 
-ENV project_version 4.0.0-SNAPSHOT
+ENV project_version 4.0.1
 ENV project_name publisher
 
 COPY target/${project_name}-${project_version}-bin.tar.gz /opt/app/${project_name}-${project_version}-bin.tar.gz
