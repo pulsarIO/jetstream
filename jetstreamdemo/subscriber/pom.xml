@@ -19,12 +19,12 @@
 
     <groupId>com.ebay.jetstream.demo</groupId>
     <artifactId>subscriber</artifactId>
-    <version>4.0.0-SNAPSHOT</version>
+    <version>4.0.1</version>
     <modelVersion>4.0.0</modelVersion>
     <name>subscriber app</name>
 
     <properties>
-        <jetstream.version>4.0.0-SNAPSHOT</jetstream.version>
+        <jetstream.version>4.0.1</jetstream.version>
     </properties>
     
     <build>
