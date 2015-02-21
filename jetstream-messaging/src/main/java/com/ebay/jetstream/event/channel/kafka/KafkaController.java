@@ -5,7 +5,10 @@
  *******************************************************************************/
 package com.ebay.jetstream.event.channel.kafka;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -13,6 +16,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.zookeeper.CreateMode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -43,9 +47,13 @@ public class KafkaController extends AbstractNamedBean implements
 		private CuratorFramework m_curator;
 		private AtomicBoolean m_zkConnected = new AtomicBoolean(false);
 
+		private List<String> m_nonresolvablehosts = new ArrayList<String>();
+		private List<String> m_resolvablehosts = new ArrayList<String>();
+
 		private void createCurator() {
+			String resolvablcnxnstr =  findDNSResolvableZkHosts(m_config.getZkConnect());
 			m_curator = CuratorFrameworkFactory.newClient(
-					m_config.getZkConnect(),
+					resolvablcnxnstr,
 					m_config.getZkSessionTimeoutMs(),
 					m_config.getZkConnectionTimeoutMs(),
 					new RetryNTimes(m_config.getRetryTimes(), m_config
@@ -104,6 +112,40 @@ public class KafkaController extends AbstractNamedBean implements
 					}
 				}
 			};
+		}
+		
+		private String findDNSResolvableZkHosts(String origCnxnStr) {
+			String[] hostporttuple = origCnxnStr.split(",");
+			StringBuffer newcnxStr = new StringBuffer();
+			int count = 1;
+			//reset resolvable list
+			m_resolvablehosts.clear();
+			m_nonresolvablehosts.clear();
+			for(String hostport : hostporttuple){
+				String host = hostport.split(":")[0];
+				String port = hostport.split(":")[1];
+				try {
+					InetAddress.getAllByName(host);
+					if(count != 1)
+						newcnxStr.append(",");
+					
+					newcnxStr.append(host);
+					newcnxStr.append(":");
+					newcnxStr.append(port);
+					m_resolvablehosts.add(host);
+					count++;
+				} catch (UnknownHostException ukhe) {
+					String trace = ExceptionUtils.getStackTrace(ukhe);
+					m_nonresolvablehosts.add(host);
+					LOGGER.error(" Non Resolvable HostName : " +  host + " : " + trace);
+				}catch (Throwable t) {
+					String trace = ExceptionUtils.getStackTrace(t);
+					m_nonresolvablehosts.add(host);
+					LOGGER.error(" Got other exception while resolving hostname : " +  host + " : " + trace);
+				}
+				
+			}
+			return newcnxStr.toString();
 		}
 
 		private synchronized void closeCurator() {
@@ -268,6 +310,14 @@ public class KafkaController extends AbstractNamedBean implements
 
 	public ZkConnector getZkConnector() {
 		return zkConnector;
+	}
+	
+	public List<String> getNonresolvablehosts() {
+		return zkConnector.m_nonresolvablehosts;
+	}
+	
+	public List<String> getResolvablehosts() {
+		return zkConnector.m_resolvablehosts;
 	}
 
 	@Override

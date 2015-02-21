@@ -5,8 +5,7 @@
  *******************************************************************************/
 package com.ebay.jetstream.event.channel.kafka;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -50,6 +49,17 @@ public class KafkaControllerInitTest {
 		kafkaController = new KafkaController();
 		kafkaController.setConfig(config);
 		kafkaController.init();
+	}
+	
+	@Test
+	public void testUnresolvableHostInit() {
+		config.setZkConnect("localhost:2183,non-resolvable.xyz:2183");
+		kafkaController = new KafkaController();
+		kafkaController.setConfig(config);
+		kafkaController.init();
+		
+		assertEquals("localhost", kafkaController.getResolvablehosts().get(0));
+		assertEquals("non-resolvable.xyz", kafkaController.getNonresolvablehosts().get(0));
 	}
 
 	@After
