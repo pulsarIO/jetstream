@@ -7,7 +7,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>pom</packaging>
 	<name>jetstream-parent</name>
-	<description>Jetstream Super POM</description>
+	<description>Distributed Stream Processing Framework</description>
+	<url>https://github.com/pulsarIO/jetstream/wiki</url>
 	
 	<licenses>
 		<license>
@@ -21,6 +22,33 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+	
+	<developers>
+    <developer>
+      <name>Sharad Murthy</name>
+      <email>shmurthy@ebay.com</email>
+      <organization>eBaySoftwareFoundation</organization>
+      <organizationUrl>http://ebayopensource.github.io/</organizationUrl>
+    </developer>
+    <developer>
+      <name>Xinglang Wang</name>
+      <email>xingwang@ebay.com</email>
+      <organization>eBaySoftwareFoundation</organization>
+      <organizationUrl>http://ebayopensource.github.io/</organizationUrl>
+    </developer>
+    <developer>
+      <name>Rajeshwari Muthupandian</name>
+      <email>rmuthupandian@ebay.com</email>
+      <organization>eBaySoftwareFoundation</organization>
+      <organizationUrl>http://ebayopensource.github.io/</organizationUrl>
+    </developer>
+     <developer>
+      <name>xiaoju wu</name>
+      <email>xiaojuwu1@ebay.com</email>
+      <organization>eBaySoftwareFoundation</organization>
+      <organizationUrl>http://ebayopensource.github.io/</organizationUrl>
+    </developer>  
+  </developers>
 	
 	<scm>
 		<connection>scm:git:git@github.com:pulsarIO/jetstream.git</connection>

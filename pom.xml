@@ -14,7 +14,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>pom</packaging>
 	<name>jetstream-root</name>
-	<description>Jetstream root POM</description>
+	<description>Distributed Stream Processing Framework</description>
+	<url>https://github.com/pulsarIO/jetstream/wiki</url>
+
+	
 	
 	<licenses>
 		<license>
@@ -28,7 +31,8 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-
+	
+	
 	<scm>
 		<connection>scm:git:git@github.com:pulsarIO/jetstream.git</connection>
 		<url>scm:git:git@github.com:pulsarIO/jetstream.git</url>
