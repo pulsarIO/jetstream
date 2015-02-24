@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ebay.jetstream.archetype</groupId>
   <artifactId>simpleapp</artifactId>
-  <version>4.0.2</version>
+  <version>4.0.3-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>jetstream archetype</name>
   <description>Distributed Stream Processing Framework</description>
@@ -29,7 +29,7 @@
     <connection>scm:git:git@github.com:pulsarIO/jetstream.git</connection>
     <url>scm:git:git@github.com:pulsarIO/jetstream.git</url>
     <developerConnection>scm:git:git@github.com:pulsarIO/jetstream.git</developerConnection>
-    <tag>jetstream-root-4.0.2</tag>
+    <tag>HEAD</tag>
   </scm>
   <distributionManagement>
     <snapshotRepository>
