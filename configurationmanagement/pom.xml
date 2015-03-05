@@ -30,7 +30,7 @@
         <spring-web.version>4.1.4.RELEASE</spring-web.version>
         <spring-security.version>3.2.5.RELEASE</spring-security.version>
         <jetstream.version>4.0.3-SNAPSHOT</jetstream.version>
-        <jettyserver.version>9.3.0.M1</jettyserver.version>
+        <jettyserver.version>9.2.2.v20140723</jettyserver.version>
     </properties>
 
     <dependencies>
