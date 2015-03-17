@@ -21,3 +21,5 @@ target/*
 .prefs
 .classpath
 
+# mac os files
+.DS_Store
