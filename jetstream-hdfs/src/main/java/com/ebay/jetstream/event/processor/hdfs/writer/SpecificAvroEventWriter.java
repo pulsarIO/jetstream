@@ -27,8 +27,10 @@ public class SpecificAvroEventWriter<T extends SpecificRecord> implements
 	private DataFileWriter<T> writer;
 	private EventTransformer<T> transformer;
 
-	public SpecificAvroEventWriter(OutputStream outStream, Schema schema,
-			Class<T> cls, CodecFactory codecFactory) {
+	public SpecificAvroEventWriter(OutputStream outStream,
+			EventTransformer<T> transformer, Schema schema, Class<T> cls,
+			CodecFactory codecFactory) {
+		this.transformer = transformer;
 		try {
 			DatumWriter<T> datumWriter = new SpecificDatumWriter<T>(cls);
 			writer = new DataFileWriter<T>(datumWriter);

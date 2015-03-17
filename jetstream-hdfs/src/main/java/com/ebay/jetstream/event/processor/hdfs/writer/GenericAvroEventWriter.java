@@ -26,8 +26,10 @@ public class GenericAvroEventWriter implements EventWriter {
 	private DataFileWriter<GenericRecord> writer;
 	private EventTransformer<GenericRecord> transformer;
 
-	public GenericAvroEventWriter(OutputStream outStream, Schema schema,
+	public GenericAvroEventWriter(OutputStream outStream,
+			EventTransformer<GenericRecord> transformer, Schema schema,
 			CodecFactory codecFactory) {
+		this.transformer = transformer;
 		try {
 			DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(
 					schema);

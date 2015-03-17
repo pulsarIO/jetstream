@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 
+import com.ebay.jetstream.event.processor.hdfs.EventTransformer;
 import com.ebay.jetstream.event.processor.hdfs.EventWriter;
 
 /**
@@ -17,9 +18,17 @@ import com.ebay.jetstream.event.processor.hdfs.EventWriter;
  */
 public class SpecificAvroEventWriterFactory<T extends SpecificRecord> extends
 		AbstractAvroEventWriterFactory {
-
 	// inject
 	private String className;
+	private EventTransformer<T> transformer;
+
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public void setTransformer(EventTransformer<T> transformer) {
+		this.transformer = transformer;
+	}
 
 	@Override
 	protected Schema loadSchema() throws Exception {
@@ -50,8 +59,8 @@ public class SpecificAvroEventWriterFactory<T extends SpecificRecord> extends
 	 */
 	@Override
 	public EventWriter createEventWriter(OutputStream outStream) {
-		return new SpecificAvroEventWriter<T>(outStream, getSchema(),
-				getSpecificClass(), getCodec());
+		return new SpecificAvroEventWriter<T>(outStream, transformer,
+				getSchema(), getSpecificClass(), getCodec());
 	}
 
 }
