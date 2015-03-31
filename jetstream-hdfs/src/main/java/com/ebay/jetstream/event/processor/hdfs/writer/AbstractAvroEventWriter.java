@@ -12,16 +12,16 @@ import org.apache.avro.file.CodecFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.ebay.jetstream.config.AbstractNamedBean;
-import com.ebay.jetstream.event.processor.hdfs.EventWriterFactory;
+import com.ebay.jetstream.event.processor.hdfs.EventWriter;
 
 /**
  * @author weifang
  * 
  */
-public abstract class AbstractAvroEventWriterFactory extends AbstractNamedBean
-		implements InitializingBean, EventWriterFactory {
-	private static Logger LOGGER = Logger.getLogger(SequenceEventWriter.class
-			.getName());
+public abstract class AbstractAvroEventWriter extends AbstractNamedBean
+		implements InitializingBean, EventWriter {
+	private static Logger LOGGER = Logger
+			.getLogger(AbstractAvroEventWriter.class.getName());
 
 	public static final String CODEC_DEFLATE = "deflate";
 	public static final String CODEC_SNAPPY = "snappy";
@@ -70,7 +70,7 @@ public abstract class AbstractAvroEventWriterFactory extends AbstractNamedBean
 		} else if (schemaLocation != null) {
 			InputStream is = null;
 			try {
-				is = GenericAvroEventWriter.class
+				is = AbstractAvroEventWriter.class
 						.getResourceAsStream(schemaLocation);
 				schema = new Schema.Parser().parse(is);
 			} finally {

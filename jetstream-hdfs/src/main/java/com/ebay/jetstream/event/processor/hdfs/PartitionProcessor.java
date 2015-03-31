@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -16,58 +17,55 @@ import kafka.common.OffsetOutOfRangeException;
 
 import com.ebay.jetstream.event.BatchResponse;
 import com.ebay.jetstream.event.JetstreamEvent;
+import com.ebay.jetstream.event.processor.hdfs.EventWriter.EventWriterInstance;
 import com.ebay.jetstream.event.processor.hdfs.util.MiscUtil;
 
 /**
  * @author weifang
  * 
  */
-public class PartitionWriter {
-	private static final Logger LOGGER = Logger.getLogger(PartitionWriter.class
-			.getName());
+public class PartitionProcessor {
+	public static final String SUFFIX_TMP_FILE = ".tmp";
+	private static final Logger LOGGER = Logger
+			.getLogger(PartitionProcessor.class.getName());
 
 	// construct
-	protected HdfsBatchProcessorConfig config;
-	protected PartitionKey partitionKey;
-	protected HdfsClient hdfs;
-	protected PartitionProgressController progress;
-	protected EventWriterFactory writerFactory;
-	protected EventWriterFactory errorWriterFactory;
-	protected FileNameResolver fileNameResolver;
+	protected final HdfsBatchProcessorConfig config;
+	protected final PartitionKey partitionKey;
+	protected final HdfsClient hdfs;
+	protected final EventWriter eventWriter;
+	protected final EventWriter errorEventWriter;
+	protected final FolderResolver folderResolver;
+	protected final List<BatchListener> listeners;
 
 	// internal
-	protected EventWriter currentWriter;
-	protected EventWriter currentErrorWriter;
+	protected String currentFolder;
+
+	protected EventWriterInstance writerInstance;
+	protected EventWriterInstance errorWriterInstance;
 	protected long startOffset = -1L;
 	protected long lastOffset = -1L;
-	protected String currentFolder;
 	protected String currentTmpFile;
 	protected String dstFilePath;
 	protected String lastDstFilePath;
 
-	// stats
-	protected long eventCount = 0L;
-	protected long errorCount = 0L;
-	protected long loadStartTime = Long.MAX_VALUE;
-	protected long loadEndTime = 0L;
-
-	public PartitionWriter(HdfsBatchProcessorConfig config,//
+	public PartitionProcessor(HdfsBatchProcessorConfig config,//
 			PartitionKey partitionKey, //
 			HdfsClient hdfs, //
-			PartitionProgressController progress, //
-			EventWriterFactory writerFactory, //
-			EventWriterFactory errorWriterFactory, //
-			FileNameResolver fileNameResolver) {
+			EventWriter eventWriter, //
+			EventWriter errorEventWriter, //
+			FolderResolver folderResolver, //
+			List<BatchListener> listeners) {
 		this.config = config;
 		this.partitionKey = partitionKey;
 		this.hdfs = hdfs;
-		this.progress = progress;
-		this.writerFactory = writerFactory;
-		this.errorWriterFactory = errorWriterFactory;
-		this.fileNameResolver = fileNameResolver;
+		this.eventWriter = eventWriter;
+		this.errorEventWriter = errorEventWriter;
+		this.folderResolver = folderResolver;
+		this.listeners = listeners;
 	}
 
-	public synchronized BatchResponse doBatch(long headOffset,
+	public synchronized BatchResponse writeBatch(final long headOffset,
 			Collection<JetstreamEvent> events, AtomicLong droppedCounter) {
 		if (events.size() <= 0) {
 			LOGGER.log(Level.INFO, partitionKey.toString()
@@ -85,7 +83,8 @@ public class PartitionWriter {
 					+ (lastOffset + 1) + " to offset " + (headOffset - 1)
 					+ " is lost.");
 		}
-		if (currentWriter == null) {
+
+		if (writerInstance == null) {
 			try {
 				openFile(events);
 			} catch (Exception e) {
@@ -93,17 +92,18 @@ public class PartitionWriter {
 			}
 		}
 
-		progress.onStartBatch();
-		headOffset--;
+		int writtenCount = 0;
+		int errorCount = 0;
+		long offset = headOffset - 1;
 		try {
 			for (JetstreamEvent event : events) {
-				headOffset++;
-				if (headOffset - lastOffset < 1) {
+				offset++;
+				if (offset - lastOffset < 1) {
 					droppedCounter.incrementAndGet();
 					continue;
 				}
 
-				boolean rs = currentWriter.write(event);
+				boolean rs = writerInstance.write(event);
 				if (!rs) {
 					logErrorEvent(event);
 					droppedCounter.incrementAndGet();
@@ -111,8 +111,7 @@ public class PartitionWriter {
 					continue;
 				}
 
-				progress.onNextEvent(event);
-				eventCount++;
+				writtenCount++;
 			}
 
 		} catch (Exception e) {
@@ -121,8 +120,12 @@ public class PartitionWriter {
 		}
 
 		lastOffset = tailOffset;
+		for (BatchListener listener : listeners) {
+			listener.onBatchCompleted(partitionKey, writtenCount, errorCount,
+					headOffset, events);
+		}
 
-		if (progress.onEndBatch()) {
+		if (folderResolver.shouldMoveToNext(events, currentFolder)) {
 			try {
 				commitFile();
 				return BatchResponse.advanceAndGetNextBatch();
@@ -134,7 +137,7 @@ public class PartitionWriter {
 		}
 	}
 
-	public synchronized BatchResponse doException(Exception ex) {
+	public synchronized BatchResponse handleException(Exception ex) {
 		if (ex instanceof OffsetOutOfRangeException) {
 			try {
 				LOGGER.log(Level.INFO, "OffsetOutOfRangeException for "
@@ -154,7 +157,7 @@ public class PartitionWriter {
 						+ ". " + ex.toString(), ex);
 
 		// unknow exception, anyway drop
-		if (currentWriter != null) {
+		if (writerInstance != null) {
 			dropTmpFile();
 			revertOffsets();
 		} else {
@@ -172,7 +175,7 @@ public class PartitionWriter {
 		return BatchResponse.revertAndGetNextBatch();
 	}
 
-	public synchronized BatchResponse doIdle() {
+	public synchronized BatchResponse handleIdle() {
 		try {
 			LOGGER.log(Level.INFO,
 					"onIdle called for " + partitionKey.toString()
@@ -184,7 +187,7 @@ public class PartitionWriter {
 		}
 	}
 
-	public synchronized BatchResponse doStreamTermination() {
+	public synchronized BatchResponse handleStreamTermination() {
 		try {
 			LOGGER.log(Level.INFO, "onStreamTermination called for "
 					+ partitionKey.toString() + ", commit file.");
@@ -214,8 +217,8 @@ public class PartitionWriter {
 	 */
 	protected synchronized void dropTmpFile() {
 		try {
-			if (currentWriter != null) {
-				currentWriter.close();
+			if (writerInstance != null) {
+				writerInstance.close();
 				hdfs.delete(currentTmpFile, false);
 				LOGGER.log(Level.INFO, "Drop tmpFile " + currentTmpFile);
 			}
@@ -224,14 +227,17 @@ public class PartitionWriter {
 					e);
 		} finally {
 			try {
-				progress.onDropFile();
+				for (BatchListener listener : listeners) {
+					listener.onFileDropped(partitionKey, currentFolder,
+							currentTmpFile);
+				}
 			} catch (Exception e) {
 				LOGGER.log(Level.SEVERE, e.toString(), e);
 			}
 
-			if (config.isLogErrorEvents() && currentErrorWriter != null) {
+			if (config.isLogErrorEvents() && errorWriterInstance != null) {
 				try {
-					currentErrorWriter.close();
+					errorWriterInstance.close();
 				} catch (Exception e) {
 					LOGGER.log(Level.SEVERE, e.toString(), e);
 				}
@@ -250,19 +256,20 @@ public class PartitionWriter {
 	protected void openFile(Collection<JetstreamEvent> events)
 			throws IOException {
 		startOffset = lastOffset + 1;
-		currentFolder = progress.onNewFile(events);
+		currentFolder = folderResolver.getCurrentFolder(events);
 		currentTmpFile = config.getWorkingFolder()
 				+ "/"
 				+ currentFolder
 				+ "/"
-				+ fileNameResolver.getTmpFileName(partitionKey.getTopic(),
+				+ getTmpFileName(partitionKey.getTopic(),
 						partitionKey.getPartition(), startOffset);
 
 		OutputStream stream = hdfs.createFile(currentTmpFile, true);
-		currentWriter = writerFactory.createEventWriter(stream);
-
-		// log start time after file created
-		loadStartTime = System.currentTimeMillis();
+		writerInstance = eventWriter.open(stream);
+		for (BatchListener listener : listeners) {
+			listener.onFileCreated(partitionKey, startOffset, currentFolder,
+					currentTmpFile);
+		}
 	}
 
 	// make upstream wait when data destination error occurs, such as hdfs & zk
@@ -284,33 +291,26 @@ public class PartitionWriter {
 	protected synchronized void commitFile() throws Exception {
 		// flush has been committed, no need to commit again(during
 		// rebalance)
-		if (currentWriter == null)
+		if (writerInstance == null)
 			return;
 
-		LOGGER.log(Level.INFO, "Closing stream for file " + currentTmpFile
-				+ " with " + eventCount + " events in total.");
+		LOGGER.log(Level.INFO, "Closing stream for file " + currentTmpFile);
 
 		try {
-			currentWriter.close();
+			writerInstance.close();
 			Thread.sleep(config.getWaitForFileCloseInMs());
 
 			// copy this tmp file to a new dst file named with lastOffset
 			String fileName = writeDstFile();
-
-			loadEndTime = System.currentTimeMillis();
-			Map<String, Object> stats = genFileStats();
-			currentWriter.handleStats(stats);
-
-			// handle progress on commit;
-			progressCommit(fileName, stats);
+			listenOnCommit(fileName);
 		} catch (Exception e) {
 			throw new Exception(
 					"Fail to close the current writer and rename the tmp file to dest file. "
 							+ e.toString(), e);
 		} finally {
-			if (config.isLogErrorEvents() && currentErrorWriter != null) {
+			if (config.isLogErrorEvents() && errorWriterInstance != null) {
 				try {
-					currentErrorWriter.close();
+					errorWriterInstance.close();
 				} catch (Throwable ex) {
 					LOGGER.log(Level.SEVERE, "Fail to close error writer. "
 							+ ex.toString(), ex);
@@ -322,23 +322,27 @@ public class PartitionWriter {
 
 	}
 
-	protected void progressCommit(String fileName, Map<String, Object> stats)
-			throws Exception {
+	protected void listenOnCommit(String fileName) throws Exception {
 		boolean ret = true;
 		Exception ex = null;
 		try {
-			ret = progress.onCommitFile(fileName, stats);
+			for (BatchListener listener : listeners) {
+				ret = ret
+						&& listener.onFileCommited(partitionKey, startOffset,
+								lastOffset, currentFolder, fileName);
+			}
 		} catch (Exception e) {
 			ex = e;
 		}
 		if (!ret) {
 			ex = new Exception(
-					"Progress fail to move forward, delete the dest file "
-							+ dstFilePath);
+					"One or more listeners returned false. Cancel file committing.");
 		}
 		if (ex != null) {
 			try {
-				hdfs.delete(dstFilePath, false);
+				if (hdfs.exist(dstFilePath)) {
+					hdfs.delete(dstFilePath, false);
+				}
 			} catch (Exception e) {
 				LOGGER.log(Level.SEVERE, "Fail to delete dst file "
 						+ dstFilePath, e);
@@ -353,9 +357,8 @@ public class PartitionWriter {
 	protected String writeDstFile() throws Exception {
 		String dstFolderPath = config.getOutputFolder() + "/" + currentFolder;
 		hdfs.createFolder(dstFolderPath);
-		String destFileName = fileNameResolver.getDestFileName(
-				partitionKey.getTopic(), partitionKey.getPartition(),
-				startOffset, lastOffset);
+		String destFileName = getDestFileName(partitionKey.getTopic(),
+				partitionKey.getPartition(), startOffset, lastOffset);
 		dstFilePath = dstFolderPath + "/" + destFileName;
 		hdfs.rename(currentTmpFile, dstFilePath);
 		LOGGER.log(Level.INFO, "Tmp file " + currentTmpFile
@@ -364,33 +367,11 @@ public class PartitionWriter {
 	}
 
 	protected void cleanupFile() {
-		currentWriter = null;
-		currentErrorWriter = null;
+		writerInstance = null;
+		errorWriterInstance = null;
 		lastDstFilePath = dstFilePath;
 		currentTmpFile = null;
 		dstFilePath = null;
-		eventCount = 0L;
-		errorCount = 0L;
-		loadStartTime = Long.MAX_VALUE;
-		loadEndTime = 0L;
-	}
-
-	protected Map<String, Object> genFileStats() {
-		Map<String, Object> stats = new LinkedHashMap<String, Object>();
-		stats.put("hostName", MiscUtil.getLocalHostName());
-		stats.put("topic", partitionKey.getTopic());
-		stats.put("partition", partitionKey.getPartition());
-		stats.put("startOffset", startOffset);
-		stats.put("endOffset", lastOffset);
-		stats.put("eventCount", eventCount);
-		stats.put("errorCount", errorCount);
-
-		if (loadStartTime != Long.MAX_VALUE)
-			stats.put("loadStartTime", loadStartTime);
-		else
-			stats.put("loadStartTime", 0L);
-		stats.put("loadEndTime", loadEndTime);
-		return stats;
 	}
 
 	protected void logErrorEvent(JetstreamEvent event) {
@@ -398,13 +379,13 @@ public class PartitionWriter {
 			return;
 		}
 
-		if (currentErrorWriter == null) {
+		if (errorWriterInstance == null) {
 			openErrorFile();
 		}
 
-		if (currentErrorWriter != null) {
+		if (errorWriterInstance != null) {
 			try {
-				currentErrorWriter.write(event);
+				errorWriterInstance.write(event);
 			} catch (Exception ex) {
 				LOGGER.log(Level.SEVERE,
 						"Fail to log error event. " + ex.toString(), ex);
@@ -418,15 +399,39 @@ public class PartitionWriter {
 					+ "/error/"
 					+ currentFolder
 					+ "/"
-					+ fileNameResolver.getTmpFileName(partitionKey.getTopic(),
+					+ getTmpFileName(partitionKey.getTopic(),
 							partitionKey.getPartition(), startOffset)
 					+ config.getErrorFileSuffix();
 
 			OutputStream stream = hdfs.createFile(errorFile, true);
-			currentErrorWriter = writerFactory.createEventWriter(stream);
+			errorWriterInstance = errorEventWriter.open(stream);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE,
 					"Fail to create error file. " + e.toString());
 		}
+	}
+
+	protected String getTmpFileName(String topic, int partition,
+			long startOffset) {
+		String fileNamePrefix = config.getFileNamePrefix();
+		StringBuilder sb = new StringBuilder();
+		if (fileNamePrefix != null && !fileNamePrefix.isEmpty()) {
+			sb.append(fileNamePrefix).append("-");
+		}
+		return sb.append(topic).append("-").append(partition).append("-")
+				.append(startOffset).append(SUFFIX_TMP_FILE).toString();
+	}
+
+	protected String getDestFileName(String topic, int partition,
+			long startOffset, long endOffset) {
+		String fileNamePrefix = config.getFileNamePrefix();
+		String fileNameSuffix = config.getFileNameSuffix();
+		StringBuilder sb = new StringBuilder();
+		if (fileNamePrefix != null && !fileNamePrefix.isEmpty()) {
+			sb.append(fileNamePrefix).append("-");
+		}
+		return sb.append(topic).append("-").append(partition).append("-")
+				.append(startOffset).append("-").append(endOffset)
+				.append(fileNameSuffix).toString();
 	}
 }

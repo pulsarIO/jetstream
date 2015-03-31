@@ -5,19 +5,13 @@ package com.ebay.jetstream.event.processor.hdfs;
 
 import java.text.MessageFormat;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
 
 import com.ebay.jetstream.event.BatchResponse;
@@ -25,37 +19,28 @@ import com.ebay.jetstream.event.BatchSource;
 import com.ebay.jetstream.event.EventException;
 import com.ebay.jetstream.event.JetstreamEvent;
 import com.ebay.jetstream.event.channel.kafka.PartitionLostException;
-import com.ebay.jetstream.event.processor.hdfs.writer.SequenceEventWriterFactory;
+import com.ebay.jetstream.event.processor.hdfs.resolver.SystemTimeFolderResolver;
+import com.ebay.jetstream.event.processor.hdfs.writer.SequenceEventWriter;
 import com.ebay.jetstream.event.support.AbstractBatchEventProcessor;
-import com.ebay.jetstream.messaging.MessageServiceTimer;
 
 /**
  * @author weifang
  * 
  */
-public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
-		ApplicationContextAware, StatsAggregator {
+public class HdfsBatchProcessor extends AbstractBatchEventProcessor {
 	private static Logger LOGGER = Logger.getLogger(HdfsBatchProcessor.class
 			.getName());
 
 	// injected
 	protected HdfsBatchProcessorConfig config;
 	protected HdfsClient hdfs;
-	protected ProgressController progressController;
-	protected EventWriterFactory writerFactory;
-	protected EventWriterFactory errorWriterFactory;
-	protected FileNameResolver fileNameResolver;
-	protected ApplicationContext appContext;
+	protected EventWriter writerFactory;
+	protected EventWriter errorWriterFactory;
+	protected FolderResolver folderResolver;
+	protected List<BatchListener> listeners;
 
 	// internal
-	protected Map<PartitionKey, PartitionWriter> partitionWriterMap = new ConcurrentHashMap<PartitionKey, PartitionWriter>();
-	protected SuccessTask successTask;
-
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.appContext = applicationContext;
-	}
+	protected Map<PartitionKey, PartitionProcessor> partitionProcMap = new ConcurrentHashMap<PartitionKey, PartitionProcessor>();
 
 	public void setConfig(HdfsBatchProcessorConfig config) {
 		this.config = config;
@@ -65,29 +50,23 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
 		this.hdfs = hdfs;
 	}
 
-	public void setProgressController(ProgressController progressController) {
-		this.progressController = progressController;
+	public void setFolderResolver(FolderResolver folderResolver) {
+		this.folderResolver = folderResolver;
 	}
 
-	public void setWriterFactory(EventWriterFactory writerFactory) {
+	public void setWriterFactory(EventWriter writerFactory) {
 		this.writerFactory = writerFactory;
 	}
 
-	public void setErrorWriterFactory(EventWriterFactory errorWriterFactory) {
+	public void setErrorWriterFactory(EventWriter errorWriterFactory) {
 		this.errorWriterFactory = errorWriterFactory;
-	}
-
-	public void setFileNameResolver(FileNameResolver fileNameResolver) {
-		this.fileNameResolver = fileNameResolver;
 	}
 
 	@Override
 	public void shutDown() {
 		LOGGER.info("Shutting down HdfsBatchProcessor.");
-		if (successTask != null) {
-			successTask.cancel();
-		}
-		for (PartitionWriter writer : partitionWriterMap.values()) {
+
+		for (PartitionProcessor writer : partitionProcMap.values()) {
 			try {
 				writer.close();
 			} catch (Exception e) {
@@ -100,21 +79,14 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
 	@Override
 	public void init() throws Exception {
 		if (errorWriterFactory == null) {
-			SequenceEventWriterFactory seqFactory = new SequenceEventWriterFactory();
+			SequenceEventWriter seqFactory = new SequenceEventWriter();
 			seqFactory.setHdfs(hdfs);
 			seqFactory.afterPropertiesSet();
 		}
 
-		if (fileNameResolver == null) {
-			fileNameResolver = new DefaultFileNameResolver();
+		if (folderResolver == null) {
+			folderResolver = new SystemTimeFolderResolver();
 		}
-
-		successTask = new SuccessTask();
-		long interval = config.getSuccessCheckInterval();
-		MessageServiceTimer.sInstance().schedulePeriodicTask(successTask,
-				interval, interval);
-
-		progressController.setOutputFolder(config.getOutputFolder());
 	}
 
 	@Override
@@ -125,12 +97,12 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
 		long headOffset = source.getHeadOffset();
 
 		PartitionKey key = new PartitionKey(topic, partition);
-		PartitionWriter writer = partitionWriterMap.get(key);
+		PartitionProcessor writer = partitionProcMap.get(key);
 		if (writer == null) {
-			synchronized (partitionWriterMap) {
-				if (!partitionWriterMap.containsKey(key)) {
+			synchronized (partitionProcMap) {
+				if (!partitionProcMap.containsKey(key)) {
 					writer = createPartitionWriter(key);
-					partitionWriterMap.put(key, writer);
+					partitionProcMap.put(key, writer);
 				}
 			}
 		}
@@ -138,7 +110,7 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
 			// count those dropped in logic and without exception
 			AtomicLong dropped = new AtomicLong(0);
 			super.incrementEventRecievedCounter(events.size());
-			BatchResponse res = writer.doBatch(headOffset, events, dropped);
+			BatchResponse res = writer.writeBatch(headOffset, events, dropped);
 			super.incrementEventDroppedCounter(dropped.get());
 			super.incrementEventSentCounter(events.size() - dropped.get());
 			return res;
@@ -165,11 +137,11 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
 		}
 
 		PartitionKey key = new PartitionKey(topic, partition);
-		PartitionWriter writer = partitionWriterMap.get(key);
+		PartitionProcessor writer = partitionProcMap.get(key);
 		if (writer != null) {
-			BatchResponse res = writer.doStreamTermination();
+			BatchResponse res = writer.handleStreamTermination();
 			writer.close();
-			partitionWriterMap.remove(key);
+			partitionProcMap.remove(key);
 			return res;
 		} else {
 			return BatchResponse.advanceAndGetNextBatch();
@@ -183,15 +155,15 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
 		PartitionKey key = new PartitionKey(topic, partition);
 
 		LOGGER.log(Level.SEVERE, "Onexception for stream of " + key, ex);
-		PartitionWriter writer = partitionWriterMap.get(key);
+		PartitionProcessor writer = partitionProcMap.get(key);
 		if (writer != null) {
 			if (ex instanceof PartitionLostException) {
 				LOGGER.log(Level.SEVERE,
 						"PartitionLost, drop the status of this partition.", ex);
 				writer.close();
-				partitionWriterMap.remove(key);
+				partitionProcMap.remove(key);
 			} else {
-				return writer.doException(ex);
+				return writer.handleException(ex);
 			}
 		}
 		return BatchResponse.getNextBatch();
@@ -203,9 +175,9 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
 		int partition = (Integer) source.getPartition();
 		PartitionKey key = new PartitionKey(topic, partition);
 
-		PartitionWriter writer = partitionWriterMap.get(key);
+		PartitionProcessor writer = partitionProcMap.get(key);
 		if (writer != null) {
-			return writer.doIdle();
+			return writer.handleIdle();
 		}
 		return BatchResponse.getNextBatch();
 	}
@@ -225,88 +197,13 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor implements
 		// doesn't handle pause and resume, depends on the upstream
 	}
 
-	protected PartitionWriter createPartitionWriter(PartitionKey key) {
-		PartitionProgressController progress = progressController
-				.createPartitionProgressController(key);
-		return new PartitionWriter(config,//
+	protected PartitionProcessor createPartitionWriter(PartitionKey key) {
+		return new PartitionProcessor(config,//
 				key, //
 				hdfs, //
-				progress, //
 				writerFactory, //
 				errorWriterFactory, //
-				fileNameResolver);
-	}
-
-	class SuccessTask extends TimerTask {
-
-		@Override
-		public void run() {
-			try {
-				List<String> folders = progressController
-						.getSuccessCheckFolders();
-				for (String folder : folders) {
-					try {
-						if (progressController.isSuccess(folder)) {
-							Map<String, Map<String, Object>> fileStats = progressController
-									.getFileStats(folder);
-							if (fileStats != null) {
-								Map<String, Object> aggregated = new LinkedHashMap<String, Object>();
-								Map<String, StatsAggregator> aggregators = appContext
-										.getBeansOfType(StatsAggregator.class);
-								for (StatsAggregator agg : aggregators.values()) {
-									agg.aggregateStats(fileStats, aggregated);
-								}
-								progressController.markSuccess(folder,
-										fileStats, aggregated);
-								hdfs.delete(config.getWorkingFolder() + "/"
-										+ folder, true);
-							}
-						}
-					} catch (Exception e) {
-						LOGGER.log(Level.SEVERE,
-								"Fail to check success for folder " + folder, e);
-					}
-				}
-			} catch (Throwable th) {
-				LOGGER.log(Level.SEVERE, th.toString(), th);
-			}
-		}
-	}
-
-	@Override
-	public void aggregateStats(Map<String, Map<String, Object>> fileStats,
-			Map<String, Object> aggregatedStats) {
-		long eventCount = 0;
-		long errorCount = 0;
-		long firstLoadStartTime = Long.MAX_VALUE;
-		long lastLoadEndTime = 0;
-		Number n = null;
-		int fileCount = 0;
-		for (Entry<String, Map<String, Object>> entry : fileStats.entrySet()) {
-			Map<String, Object> stats = entry.getValue();
-			fileCount++;
-			n = (Number) stats.get("eventCount");
-			if (n != null) {
-				eventCount += n.longValue();
-			}
-			n = (Number) stats.get("errorCount");
-			if (n != null) {
-				errorCount += n.longValue();
-			}
-			n = (Number) stats.get("loadStartTime");
-			if (n != null && firstLoadStartTime > n.longValue()) {
-				firstLoadStartTime = n.longValue();
-			}
-			n = (Number) stats.get("loadEndTime");
-			if (n != null && lastLoadEndTime < n.longValue()) {
-				lastLoadEndTime = n.longValue();
-			}
-		}
-
-		aggregatedStats.put("fileCount", fileCount);
-		aggregatedStats.put("totalEventCount", eventCount);
-		aggregatedStats.put("totalErrorCount", errorCount);
-		aggregatedStats.put("firstLoadStartTime", firstLoadStartTime);
-		aggregatedStats.put("lastLoadEndTime", lastLoadEndTime);
+				folderResolver, //
+				listeners);
 	}
 }

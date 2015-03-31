@@ -3,18 +3,23 @@
  */
 package com.ebay.jetstream.event.processor.hdfs;
 
+import com.ebay.jetstream.config.AbstractNamedBean;
+import com.ebay.jetstream.xmlser.XSerializable;
+
 /**
  * @author weifang
  * 
  */
-public class HdfsBatchProcessorConfig {
+public class HdfsBatchProcessorConfig extends AbstractNamedBean implements
+		XSerializable {
 	private String outputFolder;
 	private String workingFolder;
 	private String errorFolder;
+	private String fileNamePrefix = "";
+	private String fileNameSuffix = "";
 	private long waitForFsAvaliableInMs = 60000;
 	private long waitForFileCloseInMs = 2000;
 	private boolean logErrorEvents = true;
-	private long successCheckInterval = 300000;
 	private String errorFileSuffix = ".error";
 
 	public String getOutputFolder() {
@@ -73,12 +78,20 @@ public class HdfsBatchProcessorConfig {
 		this.errorFileSuffix = errorFileSuffix;
 	}
 
-	public long getSuccessCheckInterval() {
-		return successCheckInterval;
+	public String getFileNamePrefix() {
+		return fileNamePrefix;
 	}
 
-	public void setSuccessCheckInterval(long successCheckInterval) {
-		this.successCheckInterval = successCheckInterval;
+	public void setFileNamePrefix(String fileNamePrefix) {
+		this.fileNamePrefix = fileNamePrefix;
+	}
+
+	public String getFileNameSuffix() {
+		return fileNameSuffix;
+	}
+
+	public void setFileNameSuffix(String fileNameSuffix) {
+		this.fileNameSuffix = fileNameSuffix;
 	}
 
 }

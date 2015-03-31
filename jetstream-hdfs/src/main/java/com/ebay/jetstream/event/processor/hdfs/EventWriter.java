@@ -3,7 +3,7 @@
  */
 package com.ebay.jetstream.event.processor.hdfs;
 
-import java.util.Map;
+import java.io.OutputStream;
 
 import com.ebay.jetstream.event.JetstreamEvent;
 
@@ -12,9 +12,11 @@ import com.ebay.jetstream.event.JetstreamEvent;
  * 
  */
 public interface EventWriter {
-	boolean write(JetstreamEvent event);
+	EventWriterInstance open(OutputStream output);
 
-	void handleStats(Map<String, Object> stats);
+	interface EventWriterInstance {
+		boolean write(JetstreamEvent event);
 
-	void close();
+		void close();
+	}
 }

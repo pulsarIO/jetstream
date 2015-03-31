@@ -5,47 +5,71 @@ package com.ebay.jetstream.event.processor.hdfs.writer;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.Map;
 
+import org.springframework.beans.factory.InitializingBean;
+
+import com.ebay.jetstream.config.AbstractNamedBean;
 import com.ebay.jetstream.event.JetstreamEvent;
 import com.ebay.jetstream.event.processor.hdfs.EventTransformer;
 import com.ebay.jetstream.event.processor.hdfs.EventWriter;
+import com.ebay.jetstream.event.processor.hdfs.transformer.JsonEventTransformer;
 
 /**
  * @author weifang
  * 
  */
-public class TextEventWriter implements EventWriter {
+public class TextEventWriter extends AbstractNamedBean implements
+		InitializingBean, EventWriter {
 	private EventTransformer<String> transformer;
-	private PrintWriter writer;
 
-	public TextEventWriter(OutputStream stream,
-			EventTransformer<String> transformer) {
+	public void setTransformer(EventTransformer<String> transformer) {
 		this.transformer = transformer;
-		this.writer = new PrintWriter(stream);
 	}
 
 	@Override
-	public boolean write(JetstreamEvent event) {
-		String str = null;
-		try {
-			str = transformer.transform(event);
-		} catch (Exception e) {
-			return false;
-		}
-		writer.println(str);
-		return true;
-	}
-
-	@Override
-	public void handleStats(Map<String, Object> stats) {
-	}
-
-	@Override
-	public void close() {
-		if (writer != null) {
-			writer.close();
+	public void afterPropertiesSet() throws Exception {
+		if (transformer == null) {
+			transformer = new JsonEventTransformer();
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.ebay.jetstream.event.processor.hdfs.EventWriterFactory#createEventWriter
+	 * (java.io.OutputStream)
+	 */
+	@Override
+	public EventWriterInstance open(OutputStream outStream) {
+		return new TextEventWriterInstance(outStream);
+	}
+
+	class TextEventWriterInstance implements EventWriterInstance {
+		private PrintWriter writer;
+
+		public TextEventWriterInstance(OutputStream stream) {
+			this.writer = new PrintWriter(stream);
+		}
+
+		@Override
+		public boolean write(JetstreamEvent event) {
+			String str = null;
+			try {
+				str = transformer.transform(event);
+			} catch (Exception e) {
+				return false;
+			}
+			writer.println(str);
+			return true;
+		}
+
+		@Override
+		public void close() {
+			if (writer != null) {
+				writer.close();
+			}
+		}
+
+	}
 }
