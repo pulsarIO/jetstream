@@ -4,6 +4,8 @@
 package com.ebay.jetstream.event.processor.hdfs.stats;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.ebay.jetstream.event.JetstreamEvent;
 import com.ebay.jetstream.event.processor.hdfs.PartitionKey;
@@ -13,23 +15,37 @@ import com.ebay.jetstream.event.processor.hdfs.PartitionKey;
  * 
  */
 public abstract class EventTsBasedStatsRecorder extends BaseStatsRecorder {
+
 	@Override
-	public void onBatchCompleted(PartitionKey key, long eventWrittenCount,
-			long eventErrorCount, long headOffset,
-			Collection<JetstreamEvent> events) {
-		super.onBatchCompleted(key, eventWrittenCount, eventErrorCount,
-				headOffset, events);
+	public synchronized void onFilesCreated(PartitionKey key, long startOffset,
+			String resolvedFolder, Collection<String> eventTypes,
+			String tmpFileName) {
+		super.onFilesCreated(key, startOffset, resolvedFolder, eventTypes,
+				tmpFileName);
 		EventTsBasedStats stats = (EventTsBasedStats) getStats(key);
-		for (JetstreamEvent event : events) {
-			Long ts = getTimestamp(event);
-			if (ts != null) {
-				if (stats.getMinTimestamp() > ts)
-					stats.setMinTimestamp(ts);
-				if (stats.getMaxTimestamp() < ts)
-					stats.setMaxTimestamp(ts);
-				long v = System.currentTimeMillis() - ts;
-				stats.incLatency(v);
-			}
+		for (String eventType : eventTypes) {
+			stats.getMinTimestamps().put(eventType, Long.MAX_VALUE);
+			stats.getMaxTimestamps().put(eventType, 0L);
+			stats.getTotalLatencies().put(eventType, 0L);
+		}
+	}
+
+	@Override
+	public void onEventWritten(PartitionKey key, String eventType,
+			JetstreamEvent event) {
+		super.onEventWritten(key, eventType, event);
+		Long ts = getTimestamp(event);
+		if (ts != null) {
+			EventTsBasedStats stats = (EventTsBasedStats) getStats(key);
+			Long v = null;
+			v = stats.getMinTimestamps().get(eventType);
+			if (v != null && v > ts)
+				stats.getMinTimestamps().put(eventType, ts);
+			v = stats.getMaxTimestamps().get(eventType);
+			if (v != null && v < ts)
+				stats.getMaxTimestamps().put(eventType, ts);
+			long latency = System.currentTimeMillis() - ts;
+			stats.incLatency(eventType, latency);
 		}
 	}
 
@@ -41,45 +57,38 @@ public abstract class EventTsBasedStatsRecorder extends BaseStatsRecorder {
 	}
 
 	public static class EventTsBasedStats extends BaseStats {
-		private long minTimestamp = Long.MAX_VALUE;
-		private long maxTimestamp = 0;
-		private long totalLatency = 0;
+		private final Map<String, Long> minTimestamps = new LinkedHashMap<String, Long>();
+		private final Map<String, Long> maxTimestamps = new LinkedHashMap<String, Long>();
+		private final Map<String, Long> totalLatencies = new LinkedHashMap<String, Long>();
 
 		@Override
 		public void cleanup() {
 			super.cleanup();
-			minTimestamp = Long.MAX_VALUE;
-			maxTimestamp = 0;
-			totalLatency = 0;
+			minTimestamps.clear();
+			maxTimestamps.clear();
+			totalLatencies.clear();
 		}
 
-		public long getMinTimestamp() {
-			return minTimestamp;
+		public Map<String, Long> getMinTimestamps() {
+			return minTimestamps;
 		}
 
-		public void setMinTimestamp(long minTimestamp) {
-			this.minTimestamp = minTimestamp;
+		public Map<String, Long> getMaxTimestamps() {
+			return maxTimestamps;
 		}
 
-		public long getMaxTimestamp() {
-			return maxTimestamp;
+		public Map<String, Long> getTotalLatencies() {
+			return totalLatencies;
 		}
 
-		public void setMaxTimestamp(long maxTimestamp) {
-			this.maxTimestamp = maxTimestamp;
+		public void incLatency(String eventType, long latency) {
+			Long v = totalLatencies.get(eventType);
+			if (v != null) {
+				v += latency;
+				totalLatencies.put(eventType, v);
+			}
 		}
 
-		public long getTotalLatency() {
-			return totalLatency;
-		}
-
-		public void setTotalLatency(long totalLatency) {
-			this.totalLatency = totalLatency;
-		}
-
-		public void incLatency(long latency) {
-			totalLatency += latency;
-		}
 	}
 
 }

@@ -18,7 +18,6 @@ public class HdfsBatchProcessorConfig extends AbstractNamedBean implements
 	private String fileNamePrefix = "";
 	private String fileNameSuffix = "";
 	private long waitForFsAvaliableInMs = 60000;
-	private long waitForFileCloseInMs = 2000;
 	private boolean logErrorEvents = true;
 	private String errorFileSuffix = ".error";
 
@@ -52,14 +51,6 @@ public class HdfsBatchProcessorConfig extends AbstractNamedBean implements
 
 	public void setWaitForFsAvaliableInMs(long waitForFsAvaliableInMs) {
 		this.waitForFsAvaliableInMs = waitForFsAvaliableInMs;
-	}
-
-	public long getWaitForFileCloseInMs() {
-		return waitForFileCloseInMs;
-	}
-
-	public void setWaitForFileCloseInMs(long waitForFileCloseInMs) {
-		this.waitForFileCloseInMs = waitForFileCloseInMs;
 	}
 
 	public boolean isLogErrorEvents() {

@@ -4,6 +4,7 @@
 package com.ebay.jetstream.event.processor.hdfs.util;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,5 +42,27 @@ public class MiscUtil {
 		}
 
 		return localHostName;
+	}
+
+	public static String getUniqueNameWithNumbers(Collection<String> names,
+			String baseName) {
+		if (names == null) {
+			return baseName;
+		}
+		String name = baseName;
+		int i = 1;
+		while (names.contains(name)) {
+			name = baseName + i;
+			i++;
+		}
+		return name;
+	}
+
+	public static long maxToZero(long input) {
+		if (input == Long.MAX_VALUE) {
+			return 0;
+		} else {
+			return input;
+		}
 	}
 }

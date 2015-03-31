@@ -75,14 +75,11 @@ public class CommonTest extends JetstreamTestApp {
 		assertEquals(true, successFile.exists());
 		FileInputStream fis = new FileInputStream(successFile);
 		Map<String, Object> json = JsonUtil.jsonStreamToMap(fis);
-		Map<String, Object> overview = (Map<String, Object>) json
-				.get("overview");
-		assertEquals(1, overview.get("fileCount"));
-		assertEquals(150, overview.get("totalEventCount"));
+		assertEquals(1, json.get("fileCount"));
 		Map<String, Object> files = (Map<String, Object>) json.get("files");
 		assertEquals(1, files.size());
 
-		File tsDir2 = new File(outDir, "20150101/01_01_10");
+		File tsDir2 = new File(outDir, "20150101/01_01_10/type1");
 		File dataFile = new File(tsDir2, "topic1-0-150-249");
 		assertEquals(true, dataFile.exists());
 		BufferedReader reader = new BufferedReader(new FileReader(dataFile));
@@ -96,6 +93,11 @@ public class CommonTest extends JetstreamTestApp {
 		List<JetstreamEvent> fakes = new ArrayList<JetstreamEvent>();
 		for (int i = 0; i < count; i++) {
 			JetstreamEvent jsEvent = new JetstreamEvent();
+			if (i % 2 == 0) {
+				jsEvent.setEventType("type1");
+			} else {
+				jsEvent.setEventType("type2");
+			}
 			jsEvent.put(TIMESTAMP_KEY, timeSlot + i);
 			jsEvent.put("key1", "value1");
 			jsEvent.put("key2", "value2" + i);

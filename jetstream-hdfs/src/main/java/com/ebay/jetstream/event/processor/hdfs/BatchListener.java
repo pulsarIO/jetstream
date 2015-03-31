@@ -12,15 +12,20 @@ import com.ebay.jetstream.event.JetstreamEvent;
  * 
  */
 public interface BatchListener {
-	void onFileCreated(PartitionKey key, long startOffset, String folder,
+	void onFilesCreated(PartitionKey key, long startOffset,
+			String resolvedFolder, Collection<String> eventTypes,
 			String tmpFileName);
 
-	void onBatchCompleted(PartitionKey key, long eventWrittenCount,
-			long eventErrorCount, long headOffset,
-			Collection<JetstreamEvent> events);
+	void onBatchBegin(PartitionKey key, long headOffset);
 
-	boolean onFileCommited(PartitionKey key, long startOffset, long endOffset,
-			String folder, String destFileName);
+	void onEventWritten(PartitionKey key, String eventType, JetstreamEvent event);
 
-	void onFileDropped(PartitionKey key, String folder, String tmpFileName);
+	void onEventError(PartitionKey key, String eventType, JetstreamEvent event);
+
+	void onBatchEnd(PartitionKey key, long tailOffset);
+
+	boolean onFilesCommited(PartitionKey key, long startOffset, long endOffset,
+			String resolvedFolder, String destFileName);
+
+	void onFilesDropped(PartitionKey key, String resolvedFolder);
 }

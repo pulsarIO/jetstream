@@ -27,7 +27,6 @@
 		<property name="workingFolder" value="/tmp/pulsar/common_test/working" />
 		<property name="errorFolder" value="/tmp/pulsar/common_test/error" />
 		<property name="waitForFsAvaliableInMs" value="5000" />
-		<property name="waitForFileCloseInMs" value="1000" />
 		<property name="logErrorEvents" value="true" />
 		<property name="errorFileSuffix" value=".error" />
 	</bean>
@@ -82,11 +81,17 @@
 		class="com.ebay.jetstream.event.processor.hdfs.HdfsBatchProcessor">
 		<property name="config" ref="yourHdfsBatchProcessorConfig"></property>
 		<property name="hdfs" ref="yourHdfsClient"></property>
-		<property name="eventWriter" ref="yourEventWriter"></property>
+		<property name="defaultEventWriter" ref="yourEventWriter"></property>
+		<property name="eventWriters">
+			<map>
+				<entry key="type1" value-ref="yourEventWriter" />
+			</map>
+		</property>
+
 		<property name="folderResolver" ref="yourFolderResolver"></property>
 		<property name="listeners">
 			<list>
-				<ref bean="yourEventTsBasedSuccessChecker"/>
+				<ref bean="yourEventTsBasedSuccessChecker" />
 			</list>
 		</property>
 	</bean>

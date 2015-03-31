@@ -6,6 +6,7 @@ package com.ebay.jetstream.event.processor.hdfs.stats;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -125,9 +126,9 @@ public class EventTsBasedSuccessChecker extends EventTsBasedStatsRecorder
 	}
 
 	@Override
-	public synchronized void onFileCreated(PartitionKey key, long startOffset,
-			String folder, String tmpFileName) {
-		super.onFileCreated(key, startOffset, folder, tmpFileName);
+	public synchronized void onFilesCreated(PartitionKey key, long startOffset,
+			String folder, Collection<String> eventTypes, String tmpFileName) {
+		super.onFilesCreated(key, startOffset, folder, eventTypes, tmpFileName);
 		try {
 			writeWorkingTimeSlot(
 					key,
@@ -295,21 +296,58 @@ public class EventTsBasedSuccessChecker extends EventTsBasedStatsRecorder
 		statsMap.put("partition", partitionKey.getPartition());
 		statsMap.put("startOffset", startOffset);
 		statsMap.put("endOffset", endOffset);
-		statsMap.put("eventCount", stats.getEventCount());
-		statsMap.put("errorCount", stats.getErrorCount());
-
 		if (stats.getLoadStartTime() != Long.MAX_VALUE)
 			statsMap.put("loadStartTime", stats.getLoadStartTime());
 		else
 			statsMap.put("loadStartTime", 0L);
 		statsMap.put("loadEndTime", stats.getLoadEndTime());
-		if (stats.getMinTimestamp() != Long.MAX_VALUE)
-			statsMap.put("minTimestamp", stats.getMinTimestamp());
-		else
-			statsMap.put("minTimestamp", 0L);
-		statsMap.put("maxTimestamp", stats.getMaxTimestamp());
-		statsMap.put("avgLatencyInMs",
-				stats.getTotalLatency() / stats.getEventCount());
+
+		if (stats.getEventCounts().size() == 1) {
+			statsMap.put("eventCount", stats.getEventCounts().values()
+					.iterator().next());
+		} else {
+			statsMap.put("eventCount", stats.getEventCounts());
+		}
+
+		if (stats.getErrorCounts().size() == 1) {
+			statsMap.put("errorCount", stats.getErrorCounts().values()
+					.iterator().next());
+		} else {
+			statsMap.put("errorCount", stats.getErrorCounts());
+		}
+
+		if (stats.getMinTimestamps().size() == 1) {
+			long v = stats.getMinTimestamps().values().iterator().next();
+			statsMap.put("minTimestamp", MiscUtil.maxToZero(v));
+		} else {
+			Map<String, Long> map = new LinkedHashMap<String, Long>();
+			for (String key : stats.getMinTimestamps().keySet()) {
+				map.put(key,
+						MiscUtil.maxToZero(stats.getMinTimestamps().get(key)));
+			}
+			statsMap.put("minTimestamp", map);
+		}
+
+		if (stats.getMaxTimestamps().size() == 1) {
+			statsMap.put("maxTimestamp", stats.getMaxTimestamps().values()
+					.iterator().next());
+		} else {
+			statsMap.put("maxTimestamp", stats.getMaxTimestamps());
+		}
+
+		if (stats.getTotalLatencies().size() == 1) {
+			long l = stats.getTotalLatencies().values().iterator().next();
+			long c = stats.getEventCounts().values().iterator().next();
+			statsMap.put("avgLatencyInMs", l / c);
+		} else {
+			Map<String, Long> map = new LinkedHashMap<String, Long>();
+			for (String key : stats.getTotalLatencies().keySet()) {
+				long l = stats.getTotalLatencies().get(key);
+				long c = stats.getEventCounts().get(key);
+				map.put(key, l / c);
+			}
+			statsMap.put("avgLatencyInMs", map);
+		}
 		return statsMap;
 	}
 
@@ -336,26 +374,14 @@ public class EventTsBasedSuccessChecker extends EventTsBasedStatsRecorder
 
 	protected void aggregateStats(Map<String, Map<String, Object>> fileStats,
 			Map<String, Object> aggregatedStats) {
-		long eventCount = 0;
-		long errorCount = 0;
+		int fileCount = 0;
 		long firstLoadStartTime = Long.MAX_VALUE;
 		long lastLoadEndTime = 0;
-		long avgLatencyInMs = 0;
-		long minTimestamp = Long.MAX_VALUE;
-		long maxTimestamp = 0;
+
 		Number n = null;
-		int fileCount = 0;
 		for (Entry<String, Map<String, Object>> entry : fileStats.entrySet()) {
 			Map<String, Object> stats = entry.getValue();
 			fileCount++;
-			n = (Number) stats.get("eventCount");
-			if (n != null) {
-				eventCount += n.longValue();
-			}
-			n = (Number) stats.get("errorCount");
-			if (n != null) {
-				errorCount += n.longValue();
-			}
 			n = (Number) stats.get("loadStartTime");
 			if (n != null && firstLoadStartTime > n.longValue()) {
 				firstLoadStartTime = n.longValue();
@@ -364,41 +390,20 @@ public class EventTsBasedSuccessChecker extends EventTsBasedStatsRecorder
 			if (n != null && lastLoadEndTime < n.longValue()) {
 				lastLoadEndTime = n.longValue();
 			}
-			n = (Number) stats.get("minTimestamp");
-			if (n != null && minTimestamp > n.longValue()) {
-				minTimestamp = n.longValue();
-			}
-			n = (Number) stats.get("maxTimestamp");
-			if (n != null && maxTimestamp < n.longValue()) {
-				maxTimestamp = n.longValue();
-			}
-			n = (Number) stats.get("avgLatencyInMs");
-			if (n != null) {
-				avgLatencyInMs += n.longValue();
-			}
 		}
 
 		aggregatedStats.put("fileCount", fileCount);
-		aggregatedStats.put("totalEventCount", eventCount);
-		aggregatedStats.put("totalErrorCount", errorCount);
 		aggregatedStats.put("firstLoadStartTime", firstLoadStartTime);
 		aggregatedStats.put("lastLoadEndTime", lastLoadEndTime);
-		aggregatedStats.put("minTimestamp", minTimestamp);
-		aggregatedStats.put("maxTimestamp", maxTimestamp);
-		aggregatedStats.put("avgLatencyInMs", avgLatencyInMs / fileCount);
+		aggregatedStats.put("files", fileStats);
 	}
 
-	public void markSuccess(String folder,
-			Map<String, Map<String, Object>> fileStats,
-			Map<String, Object> aggStats) {
+	public void markSuccess(String folder, Map<String, Object> aggStats) {
 		OutputStream os = null;
 		try {
 			long ts = getTimeSlot(folder);
-			Map<String, Object> ret = new LinkedHashMap<String, Object>();
-			ret.put("overview", aggStats);
-			ret.put("files", fileStats);
 			os = hdfs.createFile(getSuccessPath(folder), true);
-			JsonUtil.mapToJsonStream(ret, os);
+			JsonUtil.mapToJsonStream(aggStats, os);
 
 			deleteFileStats(ts);
 		} catch (ParseException e) {
@@ -430,7 +435,7 @@ public class EventTsBasedSuccessChecker extends EventTsBasedStatsRecorder
 							if (fileStats != null) {
 								Map<String, Object> aggregated = new LinkedHashMap<String, Object>();
 								aggregateStats(fileStats, aggregated);
-								markSuccess(folder, fileStats, aggregated);
+								markSuccess(folder, aggregated);
 							}
 						}
 					} catch (Exception e) {
