@@ -29,21 +29,23 @@
 		<property name="waitForFsAvaliableInMs" value="5000" />
 		<property name="waitForFileCloseInMs" value="1000" />
 		<property name="logErrorEvents" value="true" />
-		<property name="successCheckInterval" value="3000" />
 		<property name="errorFileSuffix" value=".error" />
 	</bean>
 
-	<bean id="yourTimeBasedProgressControllerConfig"
-		class="com.ebay.jetstream.event.processor.hdfs.progress.TimeBasedProgressControllerConfig">
+	<bean id="yourFolderResolver"
+		class="com.ebay.jetstream.event.processor.hdfs.resolver.EventTimestampFolderResolver">
 		<property name="timestampKey" value="test_timestamp" />
 		<property name="folderIntervalInMs" value="10000" />
-		<property name="moveToNextRatio" value="0.3" />
+		<property name="moveToNextRatio" value="0.2" />
 		<property name="folderPathFormat" value="yyyyMMdd/HH_mm_ss" />
 		<property name="eventSampleFactor" value="5" />
+	</bean>
+
+	<bean id="yourEventTsBasedSuccessCheckerConfig"
+		class="com.ebay.jetstream.event.processor.hdfs.stats.EventTsBasedSuccessCheckerConfig">
+		<property name="outputFolder" value="/tmp/pulsar/common_test/out" />
 		<property name="identifier" value="processor1" />
 		<property name="dataCenter" value="dc1" />
-		<property name="successCheckCount" value="6" />
-		<property name="successFileName" value="_SUCCESS" />
 		<property name="totalTopics">
 			<list>
 				<value>topic1</value>
@@ -54,39 +56,39 @@
 				<value>dc1</value>
 			</list>
 		</property>
-	</bean>
-
-	<bean id="yourProgressStore"
-		class="com.ebay.jetstream.event.processor.hdfs.progress.ZkProgressStore">
+		<property name="successCheckCount" value="6" />
+		<property name="successCheckInterval" value="3000" />
+		<property name="successFileName" value="_SUCCESS" />
 		<property name="zkHosts" value="127.0.0.1:21819" />
-		<property name="connectionTimeoutMs" value="5000" />
-		<property name="sessionTimeoutMs" value="10000" />
-		<property name="retryTimes" value="3" />
-		<property name="sleepMsBetweenRetries" value="5000" />
+		<property name="zkConnectionTimeoutMs" value="5000" />
+		<property name="zkSessionTimeoutMs" value="10000" />
+		<property name="zkRetryTimes" value="3" />
+		<property name="zkSleepMsBetweenRetries" value="5000" />
 	</bean>
 
-	<bean id="yourProgressController"
-		class="com.ebay.jetstream.event.processor.hdfs.progress.TimeBasedProgressController">
-		<property name="config" ref="yourTimeBasedProgressControllerConfig" />
-		<property name="store" ref="yourProgressStore" />
+
+	<bean id="yourEventTsBasedSuccessChecker"
+		class="com.ebay.jetstream.event.processor.hdfs.stats.EventTsBasedSuccessChecker">
+		<property name="config" ref="yourEventTsBasedSuccessCheckerConfig" />
+		<property name="folderResolver" ref="yourFolderResolver" />
 		<property name="hdfs" ref="yourHdfsClient" />
 	</bean>
 
-	<bean id="yourEventWriterFactory"
-		class="com.ebay.jetstream.event.processor.hdfs.writer.TextEventWriterFactory">
-	</bean>
-
-	<bean id="yourFileNameResolver"
-		class="com.ebay.jetstream.event.processor.hdfs.DefaultFileNameResolver">
+	<bean id="yourEventWriter"
+		class="com.ebay.jetstream.event.processor.hdfs.writer.TextEventWriter">
 	</bean>
 
 	<bean id="yourHdfsBatchProcessor"
 		class="com.ebay.jetstream.event.processor.hdfs.HdfsBatchProcessor">
 		<property name="config" ref="yourHdfsBatchProcessorConfig"></property>
 		<property name="hdfs" ref="yourHdfsClient"></property>
-		<property name="progressController" ref="yourProgressController"></property>
-		<property name="writerFactory" ref="yourEventWriterFactory"></property>
-		<property name="fileNameResolver" ref="yourFileNameResolver"></property>
+		<property name="eventWriter" ref="yourEventWriter"></property>
+		<property name="folderResolver" ref="yourFolderResolver"></property>
+		<property name="listeners">
+			<list>
+				<ref bean="yourEventTsBasedSuccessChecker"/>
+			</list>
+		</property>
 	</bean>
 
 	<bean id="ShutDownOrchestrator" class="com.ebay.jetstream.event.support.ShutDownOrchestrator"
@@ -94,7 +96,7 @@
 		<property name="shutDownComponent">
 			<list>
 				<ref bean="yourHdfsBatchProcessor" />
-				<ref bean="yourProgressController" />
+				<ref bean="yourEventTsBasedSuccessChecker" />
 				<ref bean="yourHdfsClient" />
 			</list>
 		</property>

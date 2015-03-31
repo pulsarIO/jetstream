@@ -34,8 +34,8 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor {
 	// injected
 	protected HdfsBatchProcessorConfig config;
 	protected HdfsClient hdfs;
-	protected EventWriter writerFactory;
-	protected EventWriter errorWriterFactory;
+	protected EventWriter eventWriter;
+	protected EventWriter errorEventWriter;
 	protected FolderResolver folderResolver;
 	protected List<BatchListener> listeners;
 
@@ -54,12 +54,16 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor {
 		this.folderResolver = folderResolver;
 	}
 
-	public void setWriterFactory(EventWriter writerFactory) {
-		this.writerFactory = writerFactory;
+	public void setEventWriter(EventWriter eventWriter) {
+		this.eventWriter = eventWriter;
 	}
 
-	public void setErrorWriterFactory(EventWriter errorWriterFactory) {
-		this.errorWriterFactory = errorWriterFactory;
+	public void setErrorEventWriter(EventWriter errorEventWriter) {
+		this.errorEventWriter = errorEventWriter;
+	}
+
+	public void setListeners(List<BatchListener> listeners) {
+		this.listeners = listeners;
 	}
 
 	@Override
@@ -78,7 +82,7 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor {
 
 	@Override
 	public void init() throws Exception {
-		if (errorWriterFactory == null) {
+		if (errorEventWriter == null) {
 			SequenceEventWriter seqFactory = new SequenceEventWriter();
 			seqFactory.setHdfs(hdfs);
 			seqFactory.afterPropertiesSet();
@@ -201,8 +205,8 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor {
 		return new PartitionProcessor(config,//
 				key, //
 				hdfs, //
-				writerFactory, //
-				errorWriterFactory, //
+				eventWriter, //
+				errorEventWriter, //
 				folderResolver, //
 				listeners);
 	}

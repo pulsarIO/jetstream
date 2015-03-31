@@ -59,6 +59,14 @@ public class EventTsBasedSuccessChecker extends EventTsBasedStatsRecorder
 		this.config = config;
 	}
 
+	public void setFolderResolver(EventTimestampFolderResolver folderResolver) {
+		this.folderResolver = folderResolver;
+	}
+
+	public void setHdfs(HdfsClient hdfs) {
+		this.hdfs = hdfs;
+	}
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		zkConnector = new ZkConnector(config.getZkHosts(), //
