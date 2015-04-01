@@ -31,21 +31,21 @@ public abstract class EventTsBasedStatsRecorder extends BaseStatsRecorder {
 	}
 
 	@Override
-	public void onEventWritten(PartitionKey key, String eventType,
+	public void onEventWritten(PartitionKey key, String eventTypeCategory,
 			JetstreamEvent event) {
-		super.onEventWritten(key, eventType, event);
+		super.onEventWritten(key, eventTypeCategory, event);
 		Long ts = getTimestamp(event);
 		if (ts != null) {
 			EventTsBasedStats stats = (EventTsBasedStats) getStats(key);
 			Long v = null;
-			v = stats.getMinTimestamps().get(eventType);
+			v = stats.getMinTimestamps().get(eventTypeCategory);
 			if (v != null && v > ts)
-				stats.getMinTimestamps().put(eventType, ts);
-			v = stats.getMaxTimestamps().get(eventType);
+				stats.getMinTimestamps().put(eventTypeCategory, ts);
+			v = stats.getMaxTimestamps().get(eventTypeCategory);
 			if (v != null && v < ts)
-				stats.getMaxTimestamps().put(eventType, ts);
+				stats.getMaxTimestamps().put(eventTypeCategory, ts);
 			long latency = System.currentTimeMillis() - ts;
-			stats.incLatency(eventType, latency);
+			stats.incLatency(eventTypeCategory, latency);
 		}
 	}
 

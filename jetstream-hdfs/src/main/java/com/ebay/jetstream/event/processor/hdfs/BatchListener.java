@@ -18,9 +18,11 @@ public interface BatchListener {
 
 	void onBatchBegin(PartitionKey key, long headOffset);
 
-	void onEventWritten(PartitionKey key, String eventType, JetstreamEvent event);
+	void onEventWritten(PartitionKey key, String eventTypeCategory,
+			JetstreamEvent event);
 
-	void onEventError(PartitionKey key, String eventType, JetstreamEvent event);
+	void onEventError(PartitionKey key, String eventTypeCategory,
+			JetstreamEvent event);
 
 	void onBatchEnd(PartitionKey key, long tailOffset);
 

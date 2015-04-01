@@ -39,17 +39,17 @@ public abstract class BaseStatsRecorder extends AbstractNamedBean implements
 	}
 
 	@Override
-	public void onEventWritten(PartitionKey key, String eventType,
+	public void onEventWritten(PartitionKey key, String eventTypeCategory,
 			JetstreamEvent event) {
 		BaseStats stats = getStats(key);
-		stats.incEventCount(eventType, 1);
+		stats.incEventCount(eventTypeCategory, 1);
 	}
 
 	@Override
-	public void onEventError(PartitionKey key, String eventType,
+	public void onEventError(PartitionKey key, String eventTypeCategory,
 			JetstreamEvent event) {
 		BaseStats stats = getStats(key);
-		stats.incErrorCount(eventType, 1);
+		stats.incErrorCount(eventTypeCategory, 1);
 	}
 
 	@Override
