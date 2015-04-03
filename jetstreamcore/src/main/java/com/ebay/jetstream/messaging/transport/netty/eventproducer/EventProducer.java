@@ -605,9 +605,12 @@ public class EventProducer extends Thread implements IMessageListener, ChannelFu
 		if (!ccc.getVirtualQueueMonitor().isQueueFull()) {
 
 			promise.addListener(this);
-
-			ChannelFuture f = channel.writeAndFlush(msg, promise);
-
+			
+			if (m_transportConfig.getAutoFlushSz() == 0)
+				channel.writeAndFlush(msg, promise);
+			else
+				channel.write(msg, promise);
+			
 			ccc.getVirtualQueueMonitor().increment();
 
 
