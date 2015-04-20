@@ -21,7 +21,7 @@ function constructBeanJson(appName, version, beanDefinition, beanName,
 	if (version != "") {
 		jsonStr += ", \"version\":\"" + version + "\"";
 	}
-	jsonStr += ", \"beanDefinition\":\"" + escape(beanDefinition) + "\"";
+	jsonStr += ", \"beanDefinition\":\"" + encodeURIComponent(beanDefinition) + "\"";
 	jsonStr += ", \"beanName\":\"" + beanName + "\"";
 	if (beanVersion != "") {
 		jsonStr += ", \"beanVersion\":\"" + beanVersion + "\"";
