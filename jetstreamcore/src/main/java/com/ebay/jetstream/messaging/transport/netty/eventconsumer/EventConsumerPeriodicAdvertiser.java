@@ -6,7 +6,7 @@
 package com.ebay.jetstream.messaging.transport.netty.eventconsumer;
 
 import java.util.TimerTask;
-
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,19 +24,17 @@ public class EventConsumerPeriodicAdvertiser extends TimerTask {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger("com.ebay.jetstream.messaging");
 	
-	private static final long ONCE_EVERY_NINTY_SECONDS = 90000;
-
 	private EventConsumer m_consumer;
 
 	/**
 	 * @param consumer
 	 */
-	public EventConsumerPeriodicAdvertiser(EventConsumer consumer) {
+	public EventConsumerPeriodicAdvertiser(EventConsumer consumer, int intervalInSecs) {
 
 		m_consumer = consumer;
 
 		MessageServiceTimer.sInstance().schedulePeriodicTask(this,
-				ONCE_EVERY_NINTY_SECONDS);
+				TimeUnit.MILLISECONDS.convert(intervalInSecs, TimeUnit.SECONDS));
 
 	}
 
