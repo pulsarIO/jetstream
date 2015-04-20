@@ -42,8 +42,18 @@ public class NettyTransportConfig extends TransportConfig implements XSerializab
 	private boolean m_tcpKeepAlive = false;
 	private boolean m_enableAcking = false;
 	private long m_proactiveConnCloseIntervalMs = -1; // -1 to disable the connection close, default -1 
-	
+	private int m_advertiseIntervalInSecs = 90; // 90 seconds
 
+	public int getAdvertiseIntervalInSecs() {
+		return m_advertiseIntervalInSecs;
+	}
+
+	public void setAdvertiseIntervalInSecs(int advertiseIntervalInSecs) {
+		if (advertiseIntervalInSecs > 0) {
+			this.m_advertiseIntervalInSecs = advertiseIntervalInSecs;
+		}
+	}
+    
 	public boolean isAckingEnabled() {
 		return m_enableAcking;
 	}
@@ -274,6 +284,7 @@ public class NettyTransportConfig extends TransportConfig implements XSerializab
 		result = prime * result + (m_enableAcking ? 1231 : 1237);
 		result = prime * result + (m_enableCompression ? 1231 : 1237);
 		result = prime * result + m_idleTimeoutInSecs;
+		result = prime * result + m_advertiseIntervalInSecs;
 		result = prime * result
 				+ (int) (m_maxNettyBackLog ^ (m_maxNettyBackLog >>> 32));
 		result = prime * result + m_numAcceptorIoProcessors;
@@ -332,6 +343,8 @@ public class NettyTransportConfig extends TransportConfig implements XSerializab
 			return false;
 		if (m_idleTimeoutInSecs != other.m_idleTimeoutInSecs)
 			return false;
+		if (m_advertiseIntervalInSecs != other.m_advertiseIntervalInSecs)
+			return false;
 		if (m_maxNettyBackLog != other.m_maxNettyBackLog)
 			return false;
 		if (m_numAcceptorIoProcessors != other.m_numAcceptorIoProcessors)
@@ -359,7 +372,8 @@ public class NettyTransportConfig extends TransportConfig implements XSerializab
 	public String toString() {
 		return "NettyTransportConfig [m_connectionTimeoutInSecs="
 				+ m_connectionTimeoutInSecs + ", m_idleTimeoutInSecs="
-				+ m_idleTimeoutInSecs + ", m_writeTimeoutInSecs="
+				+ m_idleTimeoutInSecs + ", m_advertiseIntervalInSecs="
+				+ m_advertiseIntervalInSecs + ", m_writeTimeoutInSecs="
 				+ m_writeTimeoutInSecs + ", m_asyncConnect=" + m_asyncConnect
 				+ ", m_maxNettyBackLog=" + m_maxNettyBackLog
 				+ ", m_numConnectorIoProcessors=" + m_numConnectorIoProcessors
