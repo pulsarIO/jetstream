@@ -422,7 +422,7 @@ public class EventConsumer implements IMessageListener {
 			advertise(NOBROADCAST);
 
 			if (m_advertiser == null)
-				m_advertiser = new EventConsumerPeriodicAdvertiser(this);
+				m_advertiser = new EventConsumerPeriodicAdvertiser(this, m_tke.getAdvertiseIntervalInSecs());
 
 		}
 	}
