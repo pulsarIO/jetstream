@@ -38,7 +38,7 @@
                                 class="com.ebay.jetstream.messaging.transport.netty.config.NettyContextConfig">
                                 <!--  TODO: Change to your context name -->
                                 <property name="contextname" value="Jetstream.sample" />
-                                <property name="port" value="15590" />
+                                <property name="port" value="#{T(java.lang.Integer).parseInt(systemProperties['jetstream.context.baseport'] ?: '15590') + 0}" />
                                 <property name="scheduler" ref="consistenthashingaffinityscheduler"/>
                             </bean>
                         </list>
@@ -71,7 +71,7 @@
                                 class="com.ebay.jetstream.messaging.transport.netty.config.NettyContextConfig">
                                 <!--  TODO: Change to your context name -->
                                 <property name="contextname" value="Jetstream.sample2" />
-                                <property name="port" value="15591" />
+                                <property name="port" value="#{T(java.lang.Integer).parseInt(systemProperties['jetstream.context.baseport'] ?: '15590') + 1}" />
                                 <property name="scheduler" ref="consistenthashingaffinityscheduler"/>
                             </bean>
                         </list>

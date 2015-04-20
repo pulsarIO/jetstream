@@ -42,7 +42,7 @@
                             <bean
                                 class="com.ebay.jetstream.messaging.transport.netty.config.NettyContextConfig">
                                 <property name="contextname" value="Jetstream.demo" />
-                                <property name="port" value="15590" />
+                                <property name="port" value="#{T(java.lang.Integer).parseInt(systemProperties['jetstream.context.baseport'] ?: '15590') + 0}" />
                                 <property name="scheduler" ref="consistenthashingaffinityscheduler"/>
                             </bean>
                         </list>
