@@ -10,6 +10,7 @@ import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.ReferenceCountUtil;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
@@ -90,20 +91,26 @@ public class HttpResponseHandler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
-        if (m_perSecRcvCount.addAndGet(1) < 0)
-            m_perSecRcvCount.set(0);
-        if (m_totalRcvCount.addAndGet(1) < 0)
-            m_totalRcvCount.set(0);
+    	if (m_perSecRcvCount.addAndGet(1) < 0)
+    		m_perSecRcvCount.set(0);
+    	if (m_totalRcvCount.addAndGet(1) < 0)
+    		m_totalRcvCount.set(0);
 
-        HttpResponse response = (HttpResponse) msg;
+    	HttpResponse response = (HttpResponse) msg;
 
-        if (response != null) {
-            String reqid = response.headers().get("X_EBAY_REQ_ID");
-            if (reqid != null) {
-                // we should only dispatch if the reqid is  set
-                m_httpClient.dispatchResponse(reqid, response);
-            }
-        }
+    	if (response != null) {
+    		String reqid = response.headers().get("X_EBAY_REQ_ID");
+    		if (reqid != null) {
+    			// we should only dispatch if the reqid is  set
+    			m_httpClient.dispatchResponse(reqid, response);
+    		}     
+    		else {
+
+    			ReferenceCountUtil.release(response);
+
+    		}
+
+    	}
     }
     
     

@@ -7,6 +7,7 @@ package com.ebay.jetstream.http.netty.client;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.ReferenceCountUtil;
 
 import java.util.Timer;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -75,8 +76,11 @@ public class HttpResponseDispatcher implements TimeSlotHashMap.Listener {
             else
                 future.setFailure();
             HttpResponseDispatchRequest workRequest = new HttpResponseDispatchRequest(future, response);
-            if (!m_workQueue.offer(workRequest))
+            if (!m_workQueue.offer(workRequest)) {
                 m_queueFullCounter.increment();
+                ReferenceCountUtil.release(response);
+            }
+            
         } else {
             m_dropCounter.increment();
         }
