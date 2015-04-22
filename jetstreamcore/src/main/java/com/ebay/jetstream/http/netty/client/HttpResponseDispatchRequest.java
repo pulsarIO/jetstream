@@ -6,6 +6,7 @@
 package com.ebay.jetstream.http.netty.client;
 
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.util.ReferenceCountUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,9 @@ public class HttpResponseDispatchRequest implements Runnable {
 			m_future.operationComplete(m_response);
 		} catch (Throwable t) {
 			LOGGER.error( "Error while dispatching response" + t.getLocalizedMessage());
+		}
+		finally {
+			 ReferenceCountUtil.release(m_response);
 		}
 	}
 

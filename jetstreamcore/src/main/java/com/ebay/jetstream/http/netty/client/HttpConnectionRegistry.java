@@ -85,7 +85,13 @@ public class HttpConnectionRegistry {
             if (m_nextSessionNdx > m_connectionIds.size() - 1)
                 m_nextSessionNdx = 0;
 
-            return m_sessions.get(m_connectionIds.get(m_nextSessionNdx++));
+            try {
+            	ctx = m_sessions.get(m_connectionIds.get(m_nextSessionNdx++));
+            } catch (Throwable t) {
+            	ctx = null;
+            }
+            
+            return ctx;
         }
     }
 
