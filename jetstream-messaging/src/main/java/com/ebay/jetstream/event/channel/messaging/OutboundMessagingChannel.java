@@ -455,7 +455,7 @@ public class OutboundMessagingChannel extends AbstractOutboundChannel implements
 				if (LOGGER.isDebugEnabled()) {
 
 					LOGGER.debug( "sending on topic - " + topic.getTopicName() + " " + ": BroadCast Key = "
-							+ event.get(bcastMsg).toString() + " EVENT - " + event.toString());
+							+ event.getMetaData(bcastMsg).toString() + " EVENT - " + event.toString());
 				}
 
 			}
