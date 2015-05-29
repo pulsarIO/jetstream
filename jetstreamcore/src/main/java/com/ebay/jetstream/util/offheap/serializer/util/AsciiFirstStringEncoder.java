@@ -107,8 +107,11 @@ public final class AsciiFirstStringEncoder {
             b = buffer.get();
         } while ((b & 0x80) == 0);
         int end = buffer.position();
+        byte lastByte = b;
         buffer.put(end - 1, (byte) (b & 0x7F));
         String value = new String(buffer.array(), start, end - start);
+        // Avoid last byte be changed in the original stream
+        buffer.put(end - 1, lastByte);
         return value;
     }
 
