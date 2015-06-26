@@ -1,12 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
 		<groupId>com.ebay.jetstream</groupId>
 		<artifactId>jetstream-parent</artifactId>
 		<version>4.0.3-SNAPSHOT</version>
 		<relativePath>../Build/superpom</relativePath>
 	</parent>
-	
+
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -19,21 +20,21 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-	
-    <artifactId>jetstream-hdfs</artifactId>
-    
-    <dependencies>
-        <dependency>
-            <groupId>com.ebay.jetstream</groupId>
-            <artifactId>jetstreamframework</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.ebay.jetstream</groupId>
-            <artifactId>jetstream-messaging</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
+
+	<artifactId>jetstream-hdfs</artifactId>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.ebay.jetstream</groupId>
+			<artifactId>jetstreamframework</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.ebay.jetstream</groupId>
+			<artifactId>jetstream-messaging</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-common</artifactId>
 			<version>${hadoop.version}</version>
@@ -53,6 +54,10 @@
 				<exclusion>
 					<groupId>log4j</groupId>
 					<artifactId>log4j</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.servlet</groupId>
+					<artifactId>servlet-api</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -77,14 +82,18 @@
 					<groupId>log4j</groupId>
 					<artifactId>log4j</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>javax.servlet</groupId>
+					<artifactId>servlet-api</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 	<properties>
 		<hadoop.version>2.4.0</hadoop.version>

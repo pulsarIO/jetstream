@@ -58,6 +58,7 @@
 		<module>jetstreamframework</module>
 	    <module>jetstream-channels-processors</module>
 	    <module>jetstream-messaging</module>
+	    <module>jetstream-hdfs</module>
 	    <module>configurationmanagement</module>
     </modules>
 
