@@ -2,10 +2,10 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.springframework.org/schema/beans
-    http://www.springframework.org/schema/beans/spring-beans-2.0.xsd" default-lazy-init="true">
+    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd" default-lazy-init="true">
     
     <bean id="ConfigServer" class="com.ebay.jetstream.configurationmanagement.ConfigServer" lazy-init="false">
-        <property name="port" value="8080"/>
+        <property name="port" value="#{T(java.lang.Integer).parseInt(systemProperties['jetstream.rest.baseport'] ?: '8080') + 0}"/>
     </bean>
     
     <bean id="SystemPropertiesConfiguration"

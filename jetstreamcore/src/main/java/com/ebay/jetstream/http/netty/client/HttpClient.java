@@ -326,24 +326,25 @@ public class HttpClient extends Thread implements ChannelFutureListener,
 		return m_urlConns.get(uri);
 
 	}
-
-	private HttpSessionChannelContext getNextSession(URI uri) {
-
-		HttpConnectionRegistry conRegistry = getConnectionRegistry(uri);
-
+	
+	
+	private boolean manageConnections(HttpConnectionRegistry conRegistry, URI uri) {
 		if (conRegistry.isEmpty()) {
 			// lets call connect here
 			try {
 				connect(uri, conRegistry.getMaxConnections());
 			} catch (UnknownHostException e) {
 				LOGGER.error( e.getMessage(), e);
-				return null;
+				return false;
 			}
 		} else if (conRegistry.getSessionCount() < conRegistry
 				.getMaxConnections()) {
 
 			int newConnections = getConfig().getNumConnections()
 					- conRegistry.getSessionCount();
+			
+			// now we will increase number of connections to bump up to maxConnections
+			
 			for (int i = 0; i < newConnections; i++) {
 				HttpSessionChannelContext channelcontext;
 				try {
@@ -356,8 +357,28 @@ public class HttpClient extends Thread implements ChannelFutureListener,
 			}
 			
 		}
+		
+		return true;
+	}
 
+	private HttpSessionChannelContext getNextSession(URI uri) {
+
+		HttpConnectionRegistry conRegistry = getConnectionRegistry(uri);
+
+		manageConnections(conRegistry, uri);
+
+		HttpSessionChannelContext ctx = conRegistry.getNextSession();
+		
+		if (ctx == null) {
+		
+			manageConnections(conRegistry, uri);
+		
+			ctx = conRegistry.getNextSession(); // could be session closed by the time
+			// we fetch session. So we will try to make connection one more time
+		}
+		
 		return conRegistry.getNextSession();
+		
 	}
 	
     public long getTotalResponseRejected() {

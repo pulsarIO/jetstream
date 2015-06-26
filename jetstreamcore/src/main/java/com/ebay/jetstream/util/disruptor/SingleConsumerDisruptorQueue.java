@@ -181,8 +181,9 @@ public class SingleConsumerDisruptorQueue<T> extends AbstractQueue<T> implements
         }
         if (l <= knownPublishedSeq) {
             Event<T> eventHolder = ringBuffer.get(l);
+            T t = eventHolder.removeValue();
             consumedSeq.incrementAndGet();
-            return eventHolder.removeValue();
+            return t;
         }
         return null;
     }
@@ -227,8 +228,9 @@ public class SingleConsumerDisruptorQueue<T> extends AbstractQueue<T> implements
             }
         }
         Event<T> eventHolder = ringBuffer.get(l);
+        T t = eventHolder.removeValue();
         consumedSeq.incrementAndGet();
-        return eventHolder.removeValue();
+        return t;
     }
 
     @Override
