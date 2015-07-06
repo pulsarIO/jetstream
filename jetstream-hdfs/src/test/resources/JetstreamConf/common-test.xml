@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans profile="ut" xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.1.xsd"
+	default-lazy-init="true">
+	<bean id="yourHdfsClientConfig"
+		class="com.ebay.jetstream.event.processor.hdfs.HdfsClientConfig">
+		<property name="hdfsUrl" value="file:///tmp" />
+		<property name="user" value="user1" />
+		<property name="hadoopProperties">
+			<props>
+				<prop key="dfs.datanode.socket.write.timeout">5000</prop>
+				<prop key="dfs.replication">1</prop>
+				<prop key="dfs.support.append">true</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean id="yourHdfsClient" class="com.ebay.jetstream.event.processor.hdfs.HdfsClient">
+		<property name="config" ref="yourHdfsClientConfig" />
+	</bean>
+
+	<bean id="yourHdfsBatchProcessorConfig"
+		class="com.ebay.jetstream.event.processor.hdfs.HdfsBatchProcessorConfig">
+		<property name="outputFolder" value="/tmp/pulsar/common_test/out" />
+		<property name="workingFolder" value="/tmp/pulsar/common_test/working" />
+		<property name="errorFolder" value="/tmp/pulsar/common_test/error" />
+		<property name="waitForFsAvaliableInMs" value="5000" />
+		<property name="logErrorEvents" value="true" />
+		<property name="errorFileSuffix" value=".error" />
+	</bean>
+
+	<bean id="yourFolderResolver"
+		class="com.ebay.jetstream.event.processor.hdfs.resolver.EventTimestampFolderResolver">
+		<property name="timestampKey" value="test_timestamp" />
+		<property name="folderIntervalInMs" value="10000" />
+		<property name="moveToNextRatio" value="0.2" />
+		<property name="folderPathFormat" value="yyyyMMdd/HH_mm_ss" />
+		<property name="eventSampleFactor" value="5" />
+	</bean>
+
+	<bean id="yourEventTsBasedSuccessCheckerConfig"
+		class="com.ebay.jetstream.event.processor.hdfs.stats.EventTsBasedSuccessCheckerConfig">
+		<property name="outputFolder" value="/tmp/pulsar/common_test/out" />
+		<property name="identifier" value="processor1" />
+		<property name="dataCenter" value="dc1" />
+		<property name="totalTopics">
+			<list>
+				<value>topic1</value>
+			</list>
+		</property>
+		<property name="totalDataCenters">
+			<list>
+				<value>dc1</value>
+			</list>
+		</property>
+		<property name="successCheckCount" value="6" />
+		<property name="successCheckInterval" value="3000" />
+		<property name="successFileName" value="_SUCCESS" />
+		<property name="zkHosts" value="127.0.0.1:21819" />
+		<property name="zkConnectionTimeoutMs" value="5000" />
+		<property name="zkSessionTimeoutMs" value="10000" />
+		<property name="zkRetryTimes" value="3" />
+		<property name="zkSleepMsBetweenRetries" value="5000" />
+	</bean>
+
+
+	<bean id="yourEventTsBasedSuccessChecker"
+		class="com.ebay.jetstream.event.processor.hdfs.stats.EventTsBasedSuccessChecker">
+		<property name="config" ref="yourEventTsBasedSuccessCheckerConfig" />
+		<property name="folderResolver" ref="yourFolderResolver" />
+		<property name="hdfs" ref="yourHdfsClient" />
+	</bean>
+
+	<bean id="yourEventWriter"
+		class="com.ebay.jetstream.event.processor.hdfs.writer.TextEventWriter">
+	</bean>
+
+	<bean id="yourHdfsBatchProcessor"
+		class="com.ebay.jetstream.event.processor.hdfs.HdfsBatchProcessor">
+		<property name="config" ref="yourHdfsBatchProcessorConfig"></property>
+		<property name="hdfs" ref="yourHdfsClient"></property>
+		<property name="defaultEventWriter" ref="yourEventWriter"></property>
+		<property name="eventWriters">
+			<map>
+				<entry key="type1" value-ref="yourEventWriter" />
+			</map>
+		</property>
+
+		<property name="folderResolver" ref="yourFolderResolver"></property>
+		<property name="listeners">
+			<list>
+				<ref bean="yourEventTsBasedSuccessChecker" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="ShutDownOrchestrator" class="com.ebay.jetstream.event.support.ShutDownOrchestrator"
+		lazy-init="false">
+		<property name="shutDownComponent">
+			<list>
+				<ref bean="yourHdfsBatchProcessor" />
+				<ref bean="yourEventTsBasedSuccessChecker" />
+				<ref bean="yourHdfsClient" />
+			</list>
+		</property>
+	</bean>
+</beans>
+
