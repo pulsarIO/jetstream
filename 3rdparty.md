@@ -17,6 +17,10 @@ mongo-java-driver
 javassist
 
 jackson-mapper-asl
+
+hadoop-common
+
+hadoop-hdfs
  
 
 ## Eclipse Public License
