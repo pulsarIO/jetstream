@@ -340,13 +340,13 @@ public class EventTsBasedSuccessChecker extends EventTsBasedStatsRecorder
 		if (stats.getTotalLatencies().size() == 1) {
 			long l = stats.getTotalLatencies().values().iterator().next();
 			long c = stats.getEventCounts().values().iterator().next();
-			statsMap.put("avgLatencyInMs", l / c);
+			statsMap.put("avgLatencyInMs", (c == 0) ? 0 : l / c);
 		} else {
 			Map<String, Long> map = new LinkedHashMap<String, Long>();
 			for (String key : stats.getTotalLatencies().keySet()) {
 				long l = stats.getTotalLatencies().get(key);
 				long c = stats.getEventCounts().get(key);
-				map.put(key, l / c);
+				map.put(key,(c == 0) ? 0 : l / c);
 			}
 			statsMap.put("avgLatencyInMs", map);
 		}

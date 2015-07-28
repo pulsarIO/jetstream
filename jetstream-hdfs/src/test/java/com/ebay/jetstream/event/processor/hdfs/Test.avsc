@@ -1,0 +1,9 @@
+{ 
+  "type" : "record", 
+  "name" : "TestRecord",  
+  "namespace" : "com.ebay.jetstream.event.processor.hdfs",  
+  "fields" : [  
+    {"name" : "key1", "type" : ["null", "string"]},  
+    {"name" : "key2", "type" : ["null", "string"]}
+  ]  
+}  

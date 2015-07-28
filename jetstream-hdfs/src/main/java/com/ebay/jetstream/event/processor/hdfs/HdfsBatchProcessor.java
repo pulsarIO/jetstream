@@ -112,6 +112,7 @@ public class HdfsBatchProcessor extends AbstractBatchEventProcessor {
 			SequenceEventWriter seqFactory = new SequenceEventWriter();
 			seqFactory.setHdfs(hdfs);
 			seqFactory.afterPropertiesSet();
+			errorEventWriter = seqFactory;
 		}
 
 		if (folderResolver == null) {
