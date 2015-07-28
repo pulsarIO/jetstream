@@ -121,8 +121,6 @@ public class SequenceEventWriter extends AbstractNamedBean implements
 	class SequenceEventWriterInstance implements EventWriterInstance {
 
 		private SequenceFile.Writer writer;
-		private EventTransformer<Object> keyTransformer;
-		private EventTransformer<Object> valueTransformer;
 
 		public SequenceEventWriterInstance(OutputStream stream,//
 				Class<?> keyClass, //

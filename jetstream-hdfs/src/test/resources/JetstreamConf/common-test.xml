@@ -73,6 +73,17 @@
 		<property name="hdfs" ref="yourHdfsClient" />
 	</bean>
 
+	<!-- <bean id="yourEventTransformer"
+		class="com.ebay.jetstream.event.processor.hdfs.TestSpecificAvroTransformer"/>
+
+	<bean id="yourEventWriter"
+		class="com.ebay.jetstream.event.processor.hdfs.writer.SpecificAvroEventWriter">
+		<property name="className" value="com.ebay.jetstream.event.processor.hdfs.TestRecord"></property>
+		<property name="transformer" ref="yourEventTransformer"></property>
+		<property name="schemaLocation" value="/com/ebay/jetstream/event/processor/hdfs/Test.avsc"></property>
+		<property name="codec" value="null"></property>
+	</bean> -->
+	
 	<bean id="yourEventWriter"
 		class="com.ebay.jetstream.event.processor.hdfs.writer.TextEventWriter">
 	</bean>

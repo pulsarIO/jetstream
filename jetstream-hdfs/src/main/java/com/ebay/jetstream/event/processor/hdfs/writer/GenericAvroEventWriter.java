@@ -16,19 +16,23 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumWriter;
 
 import com.ebay.jetstream.event.JetstreamEvent;
-import com.ebay.jetstream.event.processor.hdfs.EventTransformer;
 
 /**
  * @author weifang
  * 
  */
-public class GenericAvroEventWriter extends
-		AbstractAvroEventWriter {
+public class GenericAvroEventWriter extends AbstractAvroEventWriter {
 	// injected
-	private EventTransformer<GenericRecord> transformer;
+	private GenericAvroEventTransformer transformer;
 
-	public void setTransformer(EventTransformer<GenericRecord> transformer) {
+	public void setTransformer(GenericAvroEventTransformer transformer) {
 		this.transformer = transformer;
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		super.afterPropertiesSet();
+		transformer.setSchema(this.getSchema());
 	}
 
 	/*
