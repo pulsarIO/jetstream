@@ -2,7 +2,7 @@ FROM java:openjdk-7-jdk
 
 MAINTAINER Xinglang Wang <wangxinglang@gmail.com>
 
-ENV project_version 4.0.3-SNAPSHOT
+ENV project_version 4.1.0
 ENV project_name subscriber
 
 COPY target/${project_name}-${project_version}-bin.tar.gz /opt/app/${project_name}-${project_version}-bin.tar.gz

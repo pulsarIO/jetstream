@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.ebay.jetstream</groupId>
 		<artifactId>jetstream-parent</artifactId>
-		<version>4.0.3-SNAPSHOT</version>
+		<version>4.1.0</version>
 		<relativePath>../Build/superpom</relativePath>
 	</parent>
 
@@ -29,7 +29,7 @@
     <properties>
         <spring-web.version>4.1.4.RELEASE</spring-web.version>
         <spring-security.version>3.2.5.RELEASE</spring-security.version>
-        <jetstream.version>4.0.3-SNAPSHOT</jetstream.version>
+        <jetstream.version>4.1.0</jetstream.version>
         <jettyserver.version>9.2.2.v20140723</jettyserver.version>
     </properties>
 

@@ -3,7 +3,7 @@
 
 	<groupId>com.ebay.jetstream</groupId>
 	<artifactId>jetstream-parent</artifactId>
-	<version>4.0.3-SNAPSHOT</version>
+	<version>4.1.0</version>
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>pom</packaging>
 	<name>jetstream-parent</name>
@@ -54,7 +54,7 @@
 		<connection>scm:git:git@github.com:pulsarIO/jetstream.git</connection>
 		<url>scm:git:git@github.com:pulsarIO/jetstream.git</url>
 		<developerConnection>scm:git:git@github.com:pulsarIO/jetstream.git</developerConnection>
-	  <tag>HEAD</tag>
+	  <tag>jetstream-root-4.1.0</tag>
   	</scm>
   	
   	<distributionManagement>
