@@ -317,9 +317,12 @@ public class PartitionReader implements Comparable<PartitionReader> {
 						Message message = messageAndOffset.message();
 						ByteBuffer k = message.key();
 						ByteBuffer p = message.payload();
-						byte[] key = new byte[k.limit()];
+						byte[] key = null;
+						if (k != null) {
+							key = new byte[k.limit()];
+							k.get(key);
+						}
 						byte[] payload = new byte[p.limit()];
-						k.get(key);
 						p.get(payload);
 						JetstreamEvent event = m_serializer
 								.decode(key, payload);
