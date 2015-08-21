@@ -9,12 +9,12 @@
 
     <groupId>com.ebay.jetstream.demo</groupId>
     <artifactId>publisher</artifactId>
-    <version>4.1.0</version>
+    <version>4.1.1-SNAPSHOT</version>
     <modelVersion>4.0.0</modelVersion>
     <name>publisher app</name>
 
     <properties>
-        <jetstream.version>4.1.0</jetstream.version>
+        <jetstream.version>4.1.1-SNAPSHOT</jetstream.version>
     </properties>
     
     <build>

@@ -3,7 +3,7 @@
   <parent>
 		<groupId>com.ebay.jetstream</groupId>
 		<artifactId>jetstream-parent</artifactId>
-		<version>4.1.0</version>
+		<version>4.1.1-SNAPSHOT</version>
 		<relativePath>../Build/superpom</relativePath>
 	</parent>
   <artifactId>jetstream-channels-processors</artifactId>

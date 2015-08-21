@@ -8,7 +8,7 @@
 
 	<groupId>com.ebay.jetstream.demo</groupId>
 	<artifactId>jetstreamdemo</artifactId>
-	<version>4.1.0</version>
+	<version>4.1.1-SNAPSHOT</version>
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>pom</packaging>
 	<name>jetstreamdemo</name>
