@@ -22,7 +22,7 @@ public abstract class JetstreamTestApp {
 		System.setProperty("spring.profiles.active", "ut");
 
 		String home = System.getProperty("user.home");
-		String jsHome = home + "/tmp/testEnrichment";
+		String jsHome = home + "/tmp/js";
 
 		File dir = new File(jsHome).getAbsoluteFile();
 		if (dir.exists()) {

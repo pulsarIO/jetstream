@@ -22,6 +22,7 @@ import org.junit.Test;
 import com.ebay.jetstream.application.JetstreamApplication;
 import com.ebay.jetstream.event.BatchSource;
 import com.ebay.jetstream.event.JetstreamEvent;
+import com.ebay.jetstream.event.processor.hdfs.stats.EventTsBasedSuccessCheckerConfig;
 import com.ebay.jetstream.event.processor.hdfs.util.DateUtil;
 import com.ebay.jetstream.event.processor.hdfs.util.IOUtil;
 import com.ebay.jetstream.event.processor.hdfs.util.JsonUtil;
@@ -31,7 +32,10 @@ import com.ebay.jetstream.event.processor.hdfs.util.JsonUtil;
  * 
  */
 public class CommonTest extends JetstreamTestApp {
-	private static final String ROOT_FOLDER = "/tmp/pulsar/common_test";
+	private static final String TEST_TMP_FOLDER = System
+			.getProperty("user.home") + "/tmp";
+	private static final String ROOT_FOLDER = TEST_TMP_FOLDER
+			+ "/pulsar/common_test";
 	private static final String TOPIC = "topic1";
 	private static final String TIMESTAMP_KEY = "test_timestamp";
 	private static final String START_TS = "20150101_01:01:00";
@@ -44,6 +48,18 @@ public class CommonTest extends JetstreamTestApp {
 		zkServer = new ZookeeperTestServer(30000, 21819, 100);
 		zkServer.startup();
 		JetstreamTestApp.startApp("common-test.xml", 9998);
+		HdfsClientConfig cConfig = JetstreamApplication.getConfiguration()
+				.getBean(HdfsClientConfig.class);
+		cConfig.setHdfsUrl("file://" + TEST_TMP_FOLDER);
+		HdfsBatchProcessorConfig pConfig = JetstreamApplication
+				.getConfiguration().getBean(HdfsBatchProcessorConfig.class);
+		pConfig.setOutputFolder(ROOT_FOLDER + "/out");
+		pConfig.setWorkingFolder(ROOT_FOLDER + "/working");
+		pConfig.setErrorFolder(ROOT_FOLDER + "/error");
+		EventTsBasedSuccessCheckerConfig eConfig = JetstreamApplication
+				.getConfiguration().getBean(
+						EventTsBasedSuccessCheckerConfig.class);
+		eConfig.setOutputFolder(pConfig.getOutputFolder());
 	}
 
 	@AfterClass
@@ -66,7 +82,7 @@ public class CommonTest extends JetstreamTestApp {
 			processor.onNextBatch(src, events);
 		}
 		Thread.sleep(5000);
-		File outDir = new File("/tmp/pulsar/common_test/out");
+		File outDir = new File(ROOT_FOLDER + "/out");
 		File[] subDirs = outDir.listFiles();
 		assertEquals(1, subDirs.length);
 		assertEquals("20150101", subDirs[0].getName());
