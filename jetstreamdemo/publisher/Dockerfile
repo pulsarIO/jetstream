@@ -1,6 +1,6 @@
 FROM java:openjdk-7-jdk
 
-ENV project_version 4.0.3-SNAPSHOT
+ENV project_version 4.1.1-SNAPSHOT
 ENV project_name publisher
 
 COPY target/${project_name}-${project_version}-bin.tar.gz /opt/app/${project_name}-${project_version}-bin.tar.gz
@@ -19,5 +19,9 @@ ENV JETSTREAM_ZKSERVER_HOST zkserver
 ENV JETSTREAM_ZKSERVER_PORT 2181
 ENV JETSTREAM_MONGOURL mongo://mongoserver:27017/config
 
-EXPOSE 9999 15590 15591 15592 15593 15594 15595 15596 15597 15598 15599
+# One contenxt port
+ENV JETSTREAM_CONTEXT_BASEPORT 15590
+ENV JETSTREAM_APP_PORT 9999
+
+EXPOSE 9999 15590 
 ENTRYPOINT ./start.sh

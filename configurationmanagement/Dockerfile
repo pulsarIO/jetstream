@@ -2,7 +2,7 @@ FROM java:openjdk-7-jdk
 
 MAINTAINER Xinglang Wang <wangxinglang@gmail.com>
 
-ENV project_version 4.0.3-SNAPSHOT
+ENV project_version 4.1.1-SNAPSHOT
 ENV project_name configuration
 
 COPY target/${project_name}-${project_version}-bin.tar.gz /opt/app/${project_name}-${project_version}-bin.tar.gz
@@ -20,6 +20,10 @@ ENV JETSTREAM_CONFIG_VERSION 1.0
 ENV JETSTREAM_ZKSERVER_HOST zkserver
 ENV JETSTREAM_ZKSERVER_PORT 2181
 ENV JETSTREAM_MONGOURL mongo://mongoserver:27017/config
+
+# One http port, no contenxt port
+ENV JETSTREAM_REST_BASEPORT 8080
+ENV JETSTREAM_APP_PORT 9999
 
 EXPOSE 9999 8080
 ENTRYPOINT ./start.sh

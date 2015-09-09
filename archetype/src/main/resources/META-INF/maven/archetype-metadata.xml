@@ -40,7 +40,7 @@
                 <include>**/*</include>
             </includes>
         </fileSet>
-        <fileSet filtered="true" encoding="UTF-8">
+        <fileSet filtered="false" encoding="UTF-8">
             <directory>buildsrc/scripts</directory>
             <includes>
                 <include>**/*</include>
